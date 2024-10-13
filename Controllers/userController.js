@@ -4,8 +4,8 @@ const sendToken = require('../utils/jwtToken.js')
 const catchAsyncErrors = require('../middlewares/catchAsyncErrors.js')
 const twilio = require('twilio');
 const sendEmail = require('../utils/sendEmail.js')
-
-
+const processPayment = require('../utils/processPayment.js');
+const crypto = require('crypto')
 //register
 exports.register = catchAsyncErrors(async(req, res) =>{
     const {username, email, password, mobileNo} = req.body;
@@ -107,16 +107,16 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
 
   const user = await User.findOne({
     resetPasswordToken,
-    resetPasswordExpire: { $gt: Date.now() },
+    resetPasswordTokenExpire: { $gt: Date.now() },
+    
   });
+  console.log(user, resetPasswordToken, Date.now())
 
   if (!user) {
     return next(new ErrorHandler("Reset Password Token is invalid or has been expired"),400);
   }
 
-  if (req.body.password !== req.body.confirmPassword) {
-    return next(new ErrorHandler("Password Dosen't match"), 400);
-  }
+  
   user.password = req.body.password;
   user.resetPasswordToken = undefined;
   user.resetPasswordExpire = undefined;
@@ -211,12 +211,12 @@ exports.purchaseCoin = catchAsyncErrors(async(req, res, next)=>{
     newCoin = 500;
   }
 
-  const paymentSuccess = await proccessPayment(paymentDetails)
+  const paymentSuccess = await processPayment(paymentDetails)
 
   if(paymentSuccess){
     user.wallet += newCoin;
     await user.save();
-    res.status(200).json({message:`Successfully purchased ${newCoin} coin`})
+    res.status(200).json({success:true, message:`Successfully purchased ${newCoin} coin`})
   }else{
     return next(new ErrorHandler("payment not successfull"))
   }

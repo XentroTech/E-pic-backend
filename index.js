@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const cookieParsr = require('cookie-parser')
 const database = require('./database');
 const user = require('./Routes/userRoutes')
 const otp = require('./Routes/otpRoutes')
@@ -21,6 +22,7 @@ app.use(express.json())
 // middlewares
 app.use(cors());
 app.use(bodyParser.json());
+app.use(cookieParsr())
 
 // database
 database();

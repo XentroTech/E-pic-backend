@@ -18,9 +18,7 @@ const userSchema = new Schema({
         type: String,
         required: [true, "Please enter your email"],
         validate: [validator.isEmail, "Please enter valid email"],
-
-
-    },
+},
     password:{
         type:String,
         minLenght: [8, "Password should be 8 charechters"],
@@ -38,7 +36,9 @@ const userSchema = new Schema({
     liked_images: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Image' }],
     role: { type: String, enum: ['user', 'photographer', 'buyer', 'admin'], default: 'user' },
     followers: { type: Number, default: 0 },
-    following:{type:Number, default:0}
+    following:{type:Number, default:0},
+    resetPasswordToken: {type: String},
+    resetPasswordExpire: {type:Date},
 
 }, { timestamps: true })
 
@@ -75,8 +75,11 @@ userSchema.methods.getForgetPasswordToken = function(){
         .update(resetToken)
         .digest('hex') 
 
-    this.resetPasswordTokenExpire = Date.now() + 15 + 60 + 1000;
-
+    this.resetPasswordTokenExpire = Date.now() + 15 * 60 * 1000;
+    console.log(Date.now()+15*60*1000)
+    console.log(`Generated Token: ${resetToken}`);
+    console.log(`Hashed Token Stored: ${this.resetPasswordToken}`);
+    console.log(`Token Expiration Time: ${this.resetPasswordTokenExpire}`);
     return resetToken;
 
 }
