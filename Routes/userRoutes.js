@@ -1,5 +1,5 @@
 const express = require('express');
-const { register, login, logout, forgotPassword, resetPassword, getAllUsers, getAUser, updateUser, deleteUser } = require('../Controllers/userController');
+const { register, login, logout, forgotPassword, resetPassword, getAllUsers, getAUser, updateUser, deleteUser, purchaseCoin } = require('../Controllers/userController');
 
 
 const router = express.Router();
@@ -15,5 +15,7 @@ router.get('/getUsers', getAllUsers);
 router.get('/getUser/:id', getAUser);
 router.patch('/updateUser/:id', updateUser);
 router.delete('/deleteUser/:id', deleteUser);
+
+router.post("/purchaseCoin", purchaseCoin);
 
 module.exports = router;

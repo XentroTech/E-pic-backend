@@ -178,4 +178,31 @@ exports.deleteUser = catchAsyncErrors(async(req, res, next) =>{
   }
 })
 
+// purchase coin
+exports.purchaseCoin = catchAsyncErrors(async(req, res, next)=>{
+  const {coinBundle} = req.body;
+  const user = await User.findById(req.user._id)
+
+  let newCoin = 0;
+
+  if(coinBundle === "50"){
+    newCoin = 50;
+  }else if(coinBundle === "100"){
+    newCoin = 100;
+  }else if(coinBundle === "500"){
+    newCoin = 500;
+  }
+
+  const paymentSuccess = await proccessPayment(paymentDetails)
+
+  if(paymentSuccess){
+    user.wallet += newCoin;
+    await user.save();
+    res.status(200).json({message:`Successfully purchased ${newCoin} coin`})
+  }else{
+    return next(new ErrorHandler("payment not successfull"))
+  }
+
+})
+
 
