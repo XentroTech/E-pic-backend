@@ -176,6 +176,24 @@ exports.deleteUser = catchAsyncErrors(async(req, res, next) =>{
   if(!user){
     return next(new ErrorHandler("user not found", 404))
   }
+
+  await user.remove();
+
+  res(203).json({
+    success:true,
+    message:"User Deleted Successfully!".
+    user
+  })
+})
+
+//get Top sellers
+exports.getTopSellers = catchAsyncErrors(async(req, res, next)=>{
+  const topSellers = await User.find({}).sort({total_sales: -1}).limit(5).select("name profilePic")
+  if(!topSellers){
+    return next(new ErrorHandler("Top sellers not found", 404))
+  }
+
+  res.status(200).json({success: true, topSellers})
 })
 
 // purchase coin
