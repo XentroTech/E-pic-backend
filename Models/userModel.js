@@ -30,6 +30,7 @@ const userSchema = new Schema({
     refferelCode:{type:String,default:''},
     profile_pic: { type: String },
     cover_pic: { type: String },
+    image_limit:{type:Number, default:5},
     uploaded_images: { type: Number, default: 0 },
     total_likes: { type: Number, default: 0 },
     total_sales: { type: Number, default: 0 },

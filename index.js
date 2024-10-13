@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const database = require('./database');
 const user = require('./Routes/userRoutes')
 const otp = require('./Routes/otpRoutes')
+const imageRoutes = require('./Routes/imageRoutes')
 const errorMiddleware = require('./utils/error')
 
 //for performance
@@ -29,6 +30,7 @@ database();
 app.get("/", (req,res)=>{res.send("welcome to epic")})
 app.use("/api/v1/", user);
 app.use("/api/v1/", otp);
+app.use("/api/v1/", imageRoutes)
 
 
 
