@@ -2,7 +2,7 @@ const Image = require('../Models/imageModel')
 const User = require('../Models/userModel')
 const catchAsyncErrors = require('../middlewares/catchAsyncErrors')
 const ErrorHandler = require('../utils/errorHandler')
-
+const processPayment = require('../utils/processPayment')
 
 exports.uploadPhoto = catchAsyncErrors( async (req, res, next) => {
     const imageCount = req.files.length
@@ -45,6 +45,7 @@ exports.uploadPhoto = catchAsyncErrors( async (req, res, next) => {
     await user.save();
 
     res.status(201).json({
+        success:true,
         message: 'Images uploaded successfully',
         images: uploadedImages
     });
@@ -136,8 +137,10 @@ exports.likeImage = catchAsyncErrors(async(req, res, next)=>{
         user.liked_images.push(image._id)
     }
 
+    await user.save();
     await image.save();
     res.status(200).json({
+        success:true,
         message: alreadyLiked ? "unliked the image" : "liked the image",
         likesCount:image.likes.length
     })
@@ -158,8 +161,12 @@ exports.purchaseImage = catchAsyncErrors(async(req, res, next)=>{
     image.sold_count +=1;
     //updating image owner's total_sales
     image.owner.total_salse += price;
+    
+    await image.save();
+    await user.save();
 
     res.status(200).json({
+        success:true,
         message:"successfully purchase the image",
         image
     })
@@ -185,10 +192,13 @@ exports.purchaseSpace = catchAsyncErrors(async(req, res, next)=>{
     if(paymentSuccess){
         const user = await User.findById(req.user._id);
         user.image_limit += newSpace
+        await user.save();
+        res.status(200).json({
+            success:true,
+            message: `Successfully purchased ${newSpace} coins`
+        })
     }else{
-        return next(new ErrorHandler("payment not successfull"))
+        return next(new ErrorHandler("payment not successfull", 401))
     }
-    res.status(200).json({
-        message: `Successfully purchased ${newSpace} coins`
-    })
+    
 })
