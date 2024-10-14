@@ -12,6 +12,7 @@ exports.getPrizes = catchAsyncErrors(async(req, res, next)=>{
 
     res.status(200).json({
         success: ture,
+        statusCode:200,
         prizes
     })
 })
@@ -30,6 +31,7 @@ exports.updatePrize = catchAsyncErrors(async(req, res, next) =>{
 
     res.status(201).json({
         success:ture,
+        statusCode:200,
         message:"updated",
         updatedPrize
     })
@@ -45,6 +47,7 @@ exports.deletePrize = catchAsyncErrors(async(req, res, next) =>{
     await prize.remove();
     res.status(201).json({
         success:ture,
+        statusCode:201,
         message:"deleted successfully",
         prize
     })
