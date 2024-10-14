@@ -6,7 +6,7 @@ const processPayment = require('../utils/processPayment')
 
 exports.uploadPhoto = catchAsyncErrors( async (req, res, next) => {
     const imageCount = req.files.length
-    const user = await User.findById("67079a42634a0fd1d3a1b63b")
+    const user = await User.findById("670cbe77861e034d20bf1a14") //update needed as req.user_id
     
     if (imageCount >= user.image_limit ) {
         return next(new ErrorHandler("Your image limit exceed please puchase space", 400))
@@ -32,6 +32,7 @@ exports.uploadPhoto = catchAsyncErrors( async (req, res, next) => {
             image_url: `/uploads/${file.filename}`,  
             category: category,
             price: price,
+            owner:"670cbe77861e034d20bf1a14" //update needed as req.user_id
             
         });
 
@@ -57,6 +58,17 @@ exports.getAllImages = catchAsyncErrors(async(req, res, next)=>{
     const images = await Image.find({});
 
     res.status(200).send({success: true, images})
+})
+
+// get most liked images
+exports.getMostLikedImages = catchAsyncErrors(async(req, res, next)=>{
+    const images = await Image.find({}).sort({likesCount: -1}).limit(5).select("username profile_pic")
+
+    res.status(200).json({
+        success:true,
+        messages:"successfully fetched images",
+        images
+    })
 })
 
 // get an image
@@ -98,14 +110,19 @@ exports.updateImage = catchAsyncErrors(async(req, res, next)=>{
 // if need then delete an image
 exports.deleteImage = catchAsyncErrors(async(req, res, next)=>{
     const image = await Image.findById(req.params.id)
-
+    console.log(image.owner)
     if(!image){
         return next(new ErrorHandler("Image not found", 404))
     }
-
-    image.owner.uploaded_images -= 1;
-    image.owner.image_limit +=1;
-    await image.remove();
+    const user = await User.findById("670cbe77861e034d20bf1a14") //update needed as req.user_id
+    
+    if(!user){
+        return next(new ErrorHandler("image owner not found", 404))
+    }
+    console.log(user)
+    user.uploaded_images -= 1;
+    user.image_limit +=1;
+    await image.deleteOne();
 
     res.status(200).send({
         success: true,
@@ -151,7 +168,7 @@ exports.purchaseImage = catchAsyncErrors(async(req, res, next)=>{
     const {userId, imageId, price} = req.body;
     const user = await User.findById(userId);
 
-    if(usr.wallet < price){
+    if(user.wallet < price){
         return next(new ErrorHandler("Insufficient Coin Please Purchase Coin", 401))
     }
     const image = await Image.findById(imageId)

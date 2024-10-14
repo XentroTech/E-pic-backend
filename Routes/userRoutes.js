@@ -1,12 +1,14 @@
 const express = require('express');
 const { register, login, logout, forgotPassword, resetPassword, getAllUsers, getAUser, updateUser, deleteUser, purchaseCoin, getTopSellers } = require('../Controllers/userController');
+const { loginValidator } = require('../middlewares/loginValidator');
+const { registerValidator } = require('../middlewares/registerValidator');
 
 
 const router = express.Router();
 
 
-router.post('/register', register);
-router.post('/login', login);
+router.post('/register', registerValidator, register);
+router.post('/login', loginValidator, login);
 router.post('/logout', logout);
 router.post('/forgotPassword',forgotPassword);
 router.put('/password/reset/:token',resetPassword);
