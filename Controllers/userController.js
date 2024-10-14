@@ -71,6 +71,7 @@ exports.register = catchAsyncErrors(async(req, res) =>{
 
     res.status(200).send({
         success: true,
+        statusCode:200,
         message: "Logout Successufll"
     })
 
@@ -101,6 +102,7 @@ exports.register = catchAsyncErrors(async(req, res) =>{
     });
     res.status(200).send({
       success: true,
+      statusCode:200,
       message: `Email sent to ${user.email} successfully!`,
     });
   } catch (error) {
@@ -147,6 +149,7 @@ exports.getAllUsers = catchAsyncErrors(async(req, res, next)=>{
   const users = await User.find({});
   res.status(200).send({
     success: true,
+    statusCode:200,
     users
   })
 })
@@ -161,6 +164,7 @@ exports.getAUser = catchAsyncErrors(async(req, res, next)=>{
 
   res.status(200).send({
     success: true,
+    statusCode:200,
     user
   })
 })
@@ -204,6 +208,7 @@ exports.deleteUser = catchAsyncErrors(async(req, res, next) =>{
 
   return res.status(203).json({
     success:true,
+    statusCode:200,
     message:"User Deleted Successfully!",
     user
   })
@@ -216,7 +221,7 @@ exports.getTopSellers = catchAsyncErrors(async(req, res, next)=>{
     return next(new ErrorHandler("Top sellers not found", 404))
   }
 
-  res.status(200).json({success: true, topSellers})
+  res.status(200).json({success: true, statusCode:200, topSellers})
 })
 
 // purchase coin
@@ -239,7 +244,7 @@ exports.purchaseCoin = catchAsyncErrors(async(req, res, next)=>{
   if(paymentSuccess){
     user.wallet += newCoin;
     await user.save();
-    res.status(200).json({success:true, message:`Successfully purchased ${newCoin} coin`})
+    res.status(200).json({success:true, statusCode:200, message:`Successfully purchased ${newCoin} coin`})
   }else{
     return next(new ErrorHandler("payment not successfull"))
   }

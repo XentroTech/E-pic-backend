@@ -47,6 +47,7 @@ exports.uploadPhoto = catchAsyncErrors( async (req, res, next) => {
 
     res.status(201).json({
         success:true,
+        statusCode:201,
         message: 'Images uploaded successfully',
         images: uploadedImages
     });
@@ -57,7 +58,7 @@ exports.uploadPhoto = catchAsyncErrors( async (req, res, next) => {
 exports.getAllImages = catchAsyncErrors(async(req, res, next)=>{
     const images = await Image.find({});
 
-    res.status(200).send({success: true, images})
+    res.status(200).send({success: true, statusCode:200, images})
 })
 
 // get most liked images
@@ -66,6 +67,7 @@ exports.getMostLikedImages = catchAsyncErrors(async(req, res, next)=>{
 
     res.status(200).json({
         success:true,
+        statusCode:200,
         messages:"successfully fetched images",
         images
     })
@@ -82,6 +84,7 @@ exports.getAnImage = catchAsyncErrors(async(req, res, next) =>{
 
     res.status(200).send({
         success:true,
+        statusCode:200,
         image
     })
 
@@ -103,6 +106,7 @@ exports.updateImage = catchAsyncErrors(async(req, res, next)=>{
     
     res.status(200).send({
         success: true,
+        statusCode:200,
         image
     })
 })
@@ -126,6 +130,7 @@ exports.deleteImage = catchAsyncErrors(async(req, res, next)=>{
 
     res.status(200).send({
         success: true,
+        statusCode:200,
         message: "image deleted successfully!"
     })
 
@@ -158,6 +163,7 @@ exports.likeImage = catchAsyncErrors(async(req, res, next)=>{
     await image.save();
     res.status(200).json({
         success:true,
+        statusCode:200,
         message: alreadyLiked ? "unliked the image" : "liked the image",
         likesCount:image.likes.length
     })
@@ -184,6 +190,7 @@ exports.purchaseImage = catchAsyncErrors(async(req, res, next)=>{
 
     res.status(200).json({
         success:true,
+        statusCode:200,
         message:"successfully purchase the image",
         image
     })
@@ -212,6 +219,7 @@ exports.purchaseSpace = catchAsyncErrors(async(req, res, next)=>{
         await user.save();
         res.status(200).json({
             success:true,
+            statusCode:200,
             message: `Successfully purchased ${newSpace} coins`
         })
     }else{

@@ -49,7 +49,7 @@ exports.sendOtp = catchAsyncErrors(async(req, res, next)=>{
             to: mobileNo 
         });
 
-        res.status(200).send({ message: `OTP sent to ${mobileNo}`, sid: message.sid });
+        res.status(200).send({ message: `OTP sent to ${mobileNo}`, statusCode:200, sid: message.sid });
     } catch (error) {
         console.error('Error sending OTP:', error);
         res.status(500).send({ error: 'Failed to send OTP' });
@@ -79,7 +79,7 @@ exports.verifyOtp = catchAsyncErrors( async (req, res) => {
         return next(new ErrorHandler(" Invalid OTP", 400))
     }
 
-    res.status(200).json({success: true, message:" Otp varification successful!"})
+    res.status(200).json({success: true, statusCode:200, message:" Otp varification successful!"})
 })
 
 
