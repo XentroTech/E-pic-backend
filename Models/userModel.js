@@ -6,8 +6,6 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto')
 
 
-
-
 const userSchema = new Schema({
     username: {
         type: String,
@@ -17,13 +15,19 @@ const userSchema = new Schema({
     email: {
         type: String,
         required: [true, "Please enter your email"],
+        unique: true,
         validate: [validator.isEmail, "Please enter valid email"],
-},
+    },
     password:{
         type:String,
         minLenght: [8, "Password should be 8 charechters"],
         required: [true, "Please enter your password"],
-        select: false
+        
+    },
+    mobileNo:{
+        type:Number,
+        unique:true,
+        required:[true, "Please enter your mobile number"]
     },
     refferelCode:{type:String,default:''},
     profile_pic: { type: String },
@@ -38,7 +42,7 @@ const userSchema = new Schema({
     followers: { type: Number, default: 0 },
     following:{type:Number, default:0},
     resetPasswordToken: {type: String},
-    resetPasswordExpire: {type:Date},
+    resetPasswordTokenExpire: {type:Date},
 
 }, { timestamps: true })
 
@@ -76,10 +80,7 @@ userSchema.methods.getForgetPasswordToken = function(){
         .digest('hex') 
 
     this.resetPasswordTokenExpire = Date.now() + 15 * 60 * 1000;
-    console.log(Date.now()+15*60*1000)
-    console.log(`Generated Token: ${resetToken}`);
-    console.log(`Hashed Token Stored: ${this.resetPasswordToken}`);
-    console.log(`Token Expiration Time: ${this.resetPasswordTokenExpire}`);
+  
     return resetToken;
 
 }
