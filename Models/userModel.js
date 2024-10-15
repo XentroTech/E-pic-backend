@@ -41,8 +41,8 @@ const userSchema = new Schema({
     role: { type: String, enum: ['user', 'photographer', 'buyer', 'admin'], default: 'user' },
     followers: { type: Number, default: 0 },
     following:{type:Number, default:0},
-    resetPasswordToken: {type: String},
-    resetPasswordTokenExpire: {type:Date},
+    resetPasswordOtp: { type: String }, 
+    resetPasswordOtpExpire: { type: Date },
 
 }, { timestamps: true })
 
@@ -71,17 +71,15 @@ userSchema.methods.comparePassword = function(enteredPassword){
 // generating password reset token
 userSchema.methods.getForgetPasswordOtp = function(){
     // generate otp
-    const resetOtp = crypto.randomInt(100000, 999999).stirng()
-    
+    const resetOtp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // hashing and add reset password otp to user schema
     this.resetPasswordOtp = crypto
         .createHash('sha256')
         .update(resetOtp)
         .digest('hex') 
-
+    
     this.resetPasswordOtpExpire = Date.now() + 15 * 60 * 1000;
-  
     return resetOtp;
 
 }

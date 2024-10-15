@@ -1,5 +1,5 @@
 const express = require('express');
-const { register, login, logout, forgotPassword, resetPassword, getAllUsers, getAUser, updateUser, deleteUser, purchaseCoin, getTopSellers, updateUserProfile } = require('../Controllers/userController');
+const { register, login, logout, forgotPassword, resetPassword, getAllUsers, getAUser, updateUser, deleteUser, purchaseCoin, getTopSellers, updateUserProfile, resetPasswordOtpVerify } = require('../Controllers/userController');
 const { loginValidator } = require('../middlewares/loginValidator');
 const { registerValidator } = require('../middlewares/registerValidator');
 const loginRequestLimiter = require('../middlewares/loginRateLimit');
@@ -12,7 +12,8 @@ router.post('/register', registerValidator, register);
 router.post('/login', loginRequestLimiter, loginValidator, login);
 router.post('/logout', logout);
 router.post('/forgotPassword',forgotPassword);
-router.put('/password/reset/:otp',resetPassword);
+router.post('/verify/resetPasswordOtp/', resetPasswordOtpVerify);
+router.patch('/password/reset/:email',resetPassword);
 
 router.get('/getUsers', getAllUsers);
 router.get('/getUser/:id', getAUser);
