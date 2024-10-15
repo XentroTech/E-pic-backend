@@ -3,16 +3,19 @@ const ErrorHandler = require('../utils/errorHandler.js')
 const sendToken = require('../utils/jwtToken.js')
 const catchAsyncErrors = require('../middlewares/catchAsyncErrors.js')
 const twilio = require('twilio');
+const fs = require('fs'); 
 const sendEmail = require('../utils/sendEmail.js')
 const processPayment = require('../utils/processPayment.js');
 const crypto = require('crypto')
 const {  validationResult } = require('express-validator');
 
 //register
-exports.register = catchAsyncErrors(async(req, res) =>{
-    const {username, email, password, mobileNo} = req.body;
+exports.register = catchAsyncErrors(async(req, res, next) =>{
+    const {username, email, password, mobileNo, refferelCode} = req.body;
     
     const errors = validationResult(req);
+
+    
     if (!errors.isEmpty()) {
         return next(new ErrorHandler(errors.array()[0].msg, 400)); 
     }
@@ -25,7 +28,8 @@ exports.register = catchAsyncErrors(async(req, res) =>{
      username: username, 
      email:email,
      password:password,
-     mobileNo: mobileNo
+     mobileNo: mobileNo,
+     refferelCode:refferelCode
      
     });
     
@@ -86,13 +90,12 @@ exports.register = catchAsyncErrors(async(req, res) =>{
     }
 
     //get reset password token
-    const resetToken = user.getForgetPasswordToken()
+    const resetPasswordOtp = user.getForgetPasswordOtp()
 
     await user.save({validateBeforeSave: false});
-    //create reset password url
-    const resetPasswordUrl = `${req.protocol}://${req.get('host')}/api/v1/password/reset/${resetToken}`
+    
 
-    const message = `Your password reset token is :- \n\n ${resetPasswordUrl} \n\n if you are not requested this email then please ignore it`;
+    const message = `Your password reset Otp is :- \n\n ${resetPasswordOtp} \n\n if you are not requested this email then please ignore it`;
 
   try {
     await sendEmail({
@@ -106,8 +109,8 @@ exports.register = catchAsyncErrors(async(req, res) =>{
       message: `Email sent to ${user.email} successfully!`,
     });
   } catch (error) {
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpire = undefined;
+    user.resetPasswordOtp = undefined;
+    user.resetPasswordOtpExpire = undefined;
     await user.save({ validateBeforeSave: false });
 
     return next(new ErrorHandler(error.message, 500));
@@ -188,6 +191,56 @@ exports.updateUser = catchAsyncErrors(async(req, res, next)=>{
     user
   })
 })
+
+// update user profile 
+exports.updateUserProfile = catchAsyncErrors(async (req, res) => {
+  
+      const userId = req.user.id; 
+            
+      let user = await User.findById(userId);
+
+      if (!user) {
+          return res.status(404).json({ message: "User not found" });
+      }
+
+      // Handle file uploads (profile_pic and cover_pic)
+      if (req.files) {
+          if (req.files.profile_pic) {
+              // Optionally, remove old profile pic if exists
+              if (user.profile_pic) {
+                  fs.unlinkSync(user.profile_pic);
+              }
+              user.profile_pic = req.files.profile_pic[0].path;
+          }
+
+          if (req.files.cover_pic) {
+              // Optionally, remove old cover pic if exists
+              if (user.cover_pic) {
+                  fs.unlinkSync(user.cover_pic);
+              }
+              user.cover_pic = req.files.cover_pic[0].path;
+          }
+      }
+
+      // Update other fields (if needed)
+      const { username,email, mobileNo, refferelCode } = req.body;
+
+      if (username) user.username = username;
+      if (mobileNo) user.mobileNo = mobileNo;
+      if(email) user.email = email;
+      if (refferelCode) user.refferelCode = refferelCode;
+
+      // Save updated user data
+      await user.save();
+
+      res.status(200).json({ 
+          success: true,
+          message: "Profile updated successfully", 
+          user 
+      });
+ 
+})
+
 
 // delete a user
 exports.deleteUser = catchAsyncErrors(async(req, res, next) =>{
