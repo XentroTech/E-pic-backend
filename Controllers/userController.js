@@ -89,7 +89,7 @@ exports.register = catchAsyncErrors(async(req, res, next) =>{
         return next( new ErrorHandler("User not found"), 403)
     }
 
-    //get reset password token
+    //get reset password otp
     const resetPasswordOtp = user.getForgetPasswordOtp()
 
     await user.save({validateBeforeSave: false});
@@ -118,29 +118,64 @@ exports.register = catchAsyncErrors(async(req, res, next) =>{
 
  })
 
- //Reset password
-exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
-  //creating token hash
-  const resetPasswordToken = crypto
+ exports.resetPasswordOtpVerify = catchAsyncErrors(async(req, res, next )=>{
+      const {otp} = req.body;
+      
+        //otp sanitization and validation
+        if (!otp || !/^\d{6}$/.test(otp)) {
+        return next(new ErrorHandler("Invalid OTP", 400))
+    }
+    const resetPasswordOtp = crypto
     .createHash("sha256")
-    .update(req.params.token)
+    .update(otp)
     .digest("hex");
 
-  const user = await User.findOne({
-    resetPasswordToken,
-    resetPasswordTokenExpire: { $gt: Date.now() },
+    const user = await User.findOne({
+          resetPasswordOtp,
+          resetPasswordOtpExpire: { $gt: Date.now() },
+          
+        });
+        console.log(user)
+      
+        if (!user) {
+          return next(new ErrorHandler("Reset Password Otp is invalid or has been expired"),400);
+        }
+
+      res.status(200).json({
+        success:true,
+        message:"Otp verified successfully",
+        
+      })
+ })
+
+ //Reset password
+exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
+ 
     
-  });
-  console.log(user, resetPasswordToken, Date.now())
+    const {password} = req.body;
+    const email = req.params.email;
+    const errors = validationResult(req);
 
-  if (!user) {
-    return next(new ErrorHandler("Reset Password Token is invalid or has been expired"),400);
-  }
+    
+    if (!errors.isEmpty()) {
+        return next(new ErrorHandler(errors.array()[0].msg, 400)); 
+    }
 
-  
-  user.password = req.body.password;
-  user.resetPasswordToken = undefined;
-  user.resetPasswordTokenExpire = undefined;
+    const user = await User.findOne({email})
+    
+    if(!user){
+      return next(new ErrorHandler("User not found", 400))
+    }
+    
+    // hashing the new password then save to the db
+    const hashedPassword = crypto
+    .createHash("sha256")
+    .update(password)
+    .digest("hex");
+
+  user.password = hashedPassword;
+  user.resetPasswordOtp = undefined;
+  user.resetPasswordOtpExpire = undefined;
 
   await user.save();
 
