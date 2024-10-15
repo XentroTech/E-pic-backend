@@ -69,19 +69,20 @@ userSchema.methods.comparePassword = function(enteredPassword){
 }
 
 // generating password reset token
-userSchema.methods.getForgetPasswordToken = function(){
-    // generate token
-    const resetToken = crypto.randomBytes(20).toString('hex')
+userSchema.methods.getForgetPasswordOtp = function(){
+    // generate otp
+    const resetOtp = crypto.randomInt(100000, 999999).stirng()
+    
 
-    // hashing and add reset password token to user schema
-    this.resetPasswordToken = crypto
+    // hashing and add reset password otp to user schema
+    this.resetPasswordOtp = crypto
         .createHash('sha256')
-        .update(resetToken)
+        .update(resetOtp)
         .digest('hex') 
 
-    this.resetPasswordTokenExpire = Date.now() + 15 * 60 * 1000;
+    this.resetPasswordOtpExpire = Date.now() + 15 * 60 * 1000;
   
-    return resetToken;
+    return resetOtp;
 
 }
 

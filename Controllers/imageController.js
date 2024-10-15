@@ -197,6 +197,22 @@ exports.purchaseImage = catchAsyncErrors(async(req, res, next)=>{
 
 })
 
+
+// get the user's gallery
+exports.getUserGallery = catchAsyncErrors(async(req, res, next)=>{
+    const userId = req.user._id;
+    const images = await Image.find({owner: userId})
+
+    if(!images){
+        next(new ErrorHandler("Image not found", 404));
+    }
+
+    res.status(200).send({
+        success: ture,
+        images
+    })
+})
+
 // purchase spaces 
 exports.purchaseSpace = catchAsyncErrors(async(req, res, next)=>{
     const {spaceBundle, paymentDetails} = req.body
