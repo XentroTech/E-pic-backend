@@ -9,9 +9,10 @@ const processPayment = require('../utils/processPayment.js');
 const crypto = require('crypto')
 const {  validationResult } = require('express-validator');
 
+
 //register
 exports.register = catchAsyncErrors(async(req, res, next) =>{
-    const {username, email, password, mobileNo, refferelCode} = req.body;
+    const {name, username, email, password, mobileNo, referralCode} = req.body;
     
     const errors = validationResult(req);
 
@@ -20,18 +21,31 @@ exports.register = catchAsyncErrors(async(req, res, next) =>{
         return next(new ErrorHandler(errors.array()[0].msg, 400)); 
     }
 
-    if(!email || !password || !username || !mobileNo){
+    if(!name || !username || !email || !password  || !mobileNo){
       return next(new ErrorHandler("Plsease provide all informations", 401));
     }
 
     const newUser = await User.create({
+     name:name,
      username: username, 
      email:email,
      password:password,
      mobileNo: mobileNo,
-     refferelCode:refferelCode
+     referralCode:referralCode
      
     });
+
+    //set referral bonus
+    if(referralCode){
+      const referBonus = await User.findOne({username:referralCode})
+    if(referBonus){
+      newUser.wallet += 50;
+    }else{
+      return next(new ErrorHandler("Your referral id is not valid, if you don't have referral id then skip", 404))
+    }
+    }
+
+    await newUser.save();
     
     sendToken(newUser, 201, res);
  
@@ -154,9 +168,9 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
     
     const {password} = req.body;
     const email = req.params.email;
+   
     const errors = validationResult(req);
 
-    
     if (!errors.isEmpty()) {
         return next(new ErrorHandler(errors.array()[0].msg, 400)); 
     }
@@ -167,13 +181,7 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
       return next(new ErrorHandler("User not found", 400))
     }
     
-    // hashing the new password then save to the db
-    const hashedPassword = crypto
-    .createHash("sha256")
-    .update(password)
-    .digest("hex");
-
-  user.password = hashedPassword;
+  user.password = password;
   user.resetPasswordOtp = undefined;
   user.resetPasswordOtpExpire = undefined;
 
@@ -258,13 +266,12 @@ exports.updateUserProfile = catchAsyncErrors(async (req, res) => {
       }
 
       // Update other fields (if needed)
-      const { username,email, mobileNo, refferelCode } = req.body;
+      const { username,email, mobileNo } = req.body;
 
       if (username) user.username = username;
       if (mobileNo) user.mobileNo = mobileNo;
       if(email) user.email = email;
-      if (refferelCode) user.refferelCode = refferelCode;
-
+      
       // Save updated user data
       await user.save();
 

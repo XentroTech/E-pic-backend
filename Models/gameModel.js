@@ -1,13 +1,11 @@
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 
-
-
-const gameResult = new Schema({
-    userId:{},
-    gameId:{},
-    win_count:{}
+const gameSchema = new mongoose.Schema({
+    type: { type: String, enum: ['daily', 'weekly'], required: true },
+    startTime: { type: Date, required: true },
+    endTime: { type: Date, required: true },
+    duration: { type: Number, required: true }, // duration in seconds
+    status: { type: String, enum: ['active', 'completed'], default: 'active' }
 });
 
-
-module.exports = mongoose.Model('GameResult', gameResult);
+module.exports = mongoose.model('Game', gameSchema);

@@ -7,10 +7,17 @@ const crypto = require('crypto')
 
 
 const userSchema = new Schema({
-    username: {
+
+    name: {
         type: String,
         required: [true, "Please enter your name"],
         trim: true,
+    },
+    username: {
+        type: String,
+        required: [true, "Please enter your username"],
+        trim: true,
+        unique:[true, "user name should be unique"]
     },
     email: {
         type: String,
@@ -41,6 +48,7 @@ const userSchema = new Schema({
     role: { type: String, enum: ['user', 'photographer', 'buyer', 'admin'], default: 'user' },
     followers: { type: Number, default: 0 },
     following:{type:Number, default:0},
+    fcmToken: { type: String },
     resetPasswordOtp: { type: String }, 
     resetPasswordOtpExpire: { type: Date },
 
