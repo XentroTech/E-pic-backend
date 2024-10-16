@@ -36,7 +36,8 @@ const userSchema = new Schema({
         unique:true,
         required:[true, "Please enter your mobile number"]
     },
-    referralCode:{type:String,default:''},
+    referralCode:{type:String, default:''},
+    // referredUsers:[{type: mongoose.Schema.TypesObjectId, ref:'User'}],
     profile_pic: { type: String },
     cover_pic: { type: String },
     image_limit:{type:Number, default:5},

@@ -11,18 +11,18 @@ exports.updateLeaderboard = catchAsyncErrors(async (competitionType) => {
 
     await Leaderboard.deleteMany({ competitionType });
 
-    let rank = 1;
+ 
     for (const entry of entries) {
         const leaderboardEntry = new Leaderboard({
             user: entry.user,
             rank,
             score: entry.completionTime,
-            photo: entry.photo,
+            photo: entry.user.profile_pic,
             competitionType
         });
 
         await leaderboardEntry.save();
-        rank++;
+
     }
 });
 
