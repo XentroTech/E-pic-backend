@@ -6,7 +6,7 @@ const processPayment = require('../utils/processPayment')
 
 exports.uploadPhoto = catchAsyncErrors( async (req, res, next) => {
     const imageCount = req.files.length
-    const user = await User.findById("670cbe77861e034d20bf1a14") //update needed as req.user_id
+    const user = await User.findById(req.user_id) 
     
     if (imageCount >= user.image_limit ) {
         return next(new ErrorHandler("Your image limit exceed please puchase space", 400))
@@ -32,7 +32,7 @@ exports.uploadPhoto = catchAsyncErrors( async (req, res, next) => {
             image_url: `/uploads/${file.filename}`,  
             category: category,
             price: price,
-            owner:"670cbe77861e034d20bf1a14" //update needed as req.user_id
+            owner:req.usre._id
             
         });
 
@@ -118,7 +118,7 @@ exports.deleteImage = catchAsyncErrors(async(req, res, next)=>{
     if(!image){
         return next(new ErrorHandler("Image not found", 404))
     }
-    const user = await User.findById("670cbe77861e034d20bf1a14") //update needed as req.user_id
+    const user = await User.findById(req.user._id)
     
     if(!user){
         return next(new ErrorHandler("image owner not found", 404))
@@ -236,7 +236,7 @@ exports.purchaseSpace = catchAsyncErrors(async(req, res, next)=>{
         res.status(200).json({
             success:true,
             statusCode:200,
-            message: `Successfully purchased ${newSpace} coins`
+            message: `Successfully purchased ${newSpace} spaces`
         })
     }else{
         return next(new ErrorHandler("payment not successfull", 401))

@@ -25,6 +25,17 @@ exports.register = catchAsyncErrors(async(req, res, next) =>{
       return next(new ErrorHandler("Plsease provide all informations", 401));
     }
 
+     //set referral bonus
+     if(referralCode){
+      const referBonus = await User.findOne({username:referralCode})
+    if(referBonus){
+      referBonus.wallet += 50;
+      
+    }else{
+      return next(new ErrorHandler("Your referral id is not valid, if you don't have referral id then skip", 404))
+    }
+    }
+
     const newUser = await User.create({
      name:name,
      username: username, 
@@ -35,15 +46,7 @@ exports.register = catchAsyncErrors(async(req, res, next) =>{
      
     });
 
-    //set referral bonus
-    if(referralCode){
-      const referBonus = await User.findOne({username:referralCode})
-    if(referBonus){
-      newUser.wallet += 50;
-    }else{
-      return next(new ErrorHandler("Your referral id is not valid, if you don't have referral id then skip", 404))
-    }
-    }
+   
 
     await newUser.save();
     
@@ -109,7 +112,31 @@ exports.register = catchAsyncErrors(async(req, res, next) =>{
     await user.save({validateBeforeSave: false});
     
 
-    const message = `Your password reset Otp is :- \n\n ${resetPasswordOtp} \n\n if you are not requested this email then please ignore it`;
+    const message = 
+    `
+  <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
+    <div style="width: 100%; max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+        <p style="font-size: 16px; color: #333333; line-height: 1.6;">Hello ${user.username},</p>
+
+        <p style="font-size: 16px; color: #333333; line-height: 1.6;">
+            We received a request to reset the password for your account. Please use the following OTP (One-Time Password) to reset your password:
+        </p>
+
+        <p style="font-size: 24px; color: #00674F; font-weight: bold; margin: 20px 0;">${resetPasswordOtp}</p>
+
+        <p style="font-size: 16px; color: #333333; line-height: 1.6;">
+            This OTP is valid for only 15 minutes. If you did not request a password reset, please ignore this email and your account will remain secure.
+        </p>
+
+        <p style="font-size: 14px; color: #888888; margin-top: 20px; line-height: 1.6;">
+            Best regards, <br>
+            Team E-pic
+        </p>
+    </div>
+</body>
+</html>
+
+    `
 
   try {
     await sendEmail({
