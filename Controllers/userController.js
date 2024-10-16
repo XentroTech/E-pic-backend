@@ -28,9 +28,10 @@ exports.register = catchAsyncErrors(async(req, res, next) =>{
      //set referral bonus
      if(referralCode){
       const referBonus = await User.findOne({username:referralCode})
+      console.log(referBonus)
     if(referBonus){
       referBonus.wallet += 50;
-      
+      await referBonus.save();
     }else{
       return next(new ErrorHandler("Your referral id is not valid, if you don't have referral id then skip", 404))
     }
@@ -46,7 +47,10 @@ exports.register = catchAsyncErrors(async(req, res, next) =>{
      
     });
 
-   
+    if(newUser.referralCode != ""){
+      newUser.wallet += 5
+    }
+    
 
     await newUser.save();
     
