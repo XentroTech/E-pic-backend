@@ -30,7 +30,7 @@ exports.register = catchAsyncErrors(async(req, res, next) =>{
       const referBonus = await User.findOne({username:referralCode})
       console.log(referBonus)
     if(referBonus){
-      referBonus.wallet += 50;
+      referBonus.wallet += 10;
       await referBonus.save();
     }else{
       return next(new ErrorHandler("Your referral id is not valid, if you don't have referral id then skip", 404))
@@ -62,11 +62,6 @@ exports.register = catchAsyncErrors(async(req, res, next) =>{
 //login
  exports.login = catchAsyncErrors(async(req, res, next)=>{
     const {email, password} = req.body;
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return next(new ErrorHandler(errors.array()[0].msg, 400)); 
-    }
 
     if(!email || !password){
         return next(new ErrorHandler("Plsease enter email & password", 401));
@@ -297,8 +292,9 @@ exports.updateUserProfile = catchAsyncErrors(async (req, res) => {
       }
 
       // Update other fields (if needed)
-      const { username,email, mobileNo } = req.body;
+      const {name, username,email, mobileNo } = req.body;
 
+      if (name) user.username = name;
       if (username) user.username = username;
       if (mobileNo) user.mobileNo = mobileNo;
       if(email) user.email = email;
@@ -374,6 +370,41 @@ exports.purchaseCoin = catchAsyncErrors(async(req, res, next)=>{
   }else{
     return next(new ErrorHandler("payment not successfull"))
   }
+
+})
+
+//follow user
+exports.followUser = catchAsyncErrors(async(req, res, next)=>{
+  const followingUserId = req.params._id;
+  const followersUserId = req.user_id;
+
+  const followingUser = await User.findById(followingUserId)
+  const followerUser = await User.findById(followersUserId)
+
+  if(!followingUser){
+      return next(new ErrorHandler("user not found", 404))
+  }
+
+  const alreadyfollowed = followingUser.followers.includes(followingUserId);
+
+  if(alreadyfollowed){
+    followingUser.followers.pull(followersUserId);
+    followerUser.following.pusll(followingUserId)
+     
+  }else{
+    followingUser.followers.push(followersUserId);
+    followerUser.following.push(followingUserId);
+    
+  }
+
+  await followingUser.save();
+  await followerUser.save();
+
+  res.status(200).json({
+      success:true,
+      statusCode:200,
+      message: alreadyfollowed ? "unfollow the usre" : "followed the user",
+  })
 
 })
 

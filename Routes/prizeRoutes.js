@@ -4,6 +4,6 @@ const { getPrizes, updatePrize } = require('../Controllers/prizeController');
 const router = express.Router();
 
 
-router.get("/getAllPrizes", getPrizes)
-router.patch("/updatePrize", updatePrize)
-router.delete("/deletePrize", deletePrize)
+router.get("/getAllPrizes", isAuthenticated, getPrizes)
+router.patch("/updatePrize", isAuthenticated, updatePrize)
+router.delete("/deletePrize", isAuthenticated, deletePrize)
