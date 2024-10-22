@@ -1,15 +1,10 @@
-const sendToken = function(user, statusCode, res) {
-  const token = user.getJwtToken(); 
+const sendToken = function (user, statusCode, res) {
+  const token = user.getJwtToken();
 
-  const options = {
-      expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 
-      httpOnly: true,
-  };
-
-  res.status(statusCode).cookie("token", token, options).send({
-      success: true,
-      user,
-      token,
+  res.status(statusCode).set("Authorization", `Bearer ${token}`).send({
+    success: true,
+    user,
+    token,
   });
 };
 
