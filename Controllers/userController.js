@@ -1,118 +1,113 @@
-const User = require('../Models/userModel')
-const ErrorHandler = require('../utils/errorHandler.js')
-const sendToken = require('../utils/jwtToken.js')
-const catchAsyncErrors = require('../middlewares/catchAsyncErrors.js')
-const twilio = require('twilio');
-const fs = require('fs'); 
-const sendEmail = require('../utils/sendEmail.js')
-const processPayment = require('../utils/processPayment.js');
-const crypto = require('crypto')
-const {  validationResult } = require('express-validator');
-
+const User = require("../Models/userModel");
+const ErrorHandler = require("../utils/errorHandler.js");
+const sendToken = require("../utils/jwtToken.js");
+const catchAsyncErrors = require("../middlewares/catchAsyncErrors.js");
+const twilio = require("twilio");
+const fs = require("fs");
+const sendEmail = require("../utils/sendEmail.js");
+const processPayment = require("../utils/processPayment.js");
+const crypto = require("crypto");
+const { validationResult } = require("express-validator");
 
 //register
-exports.register = catchAsyncErrors(async(req, res, next) =>{
-    const {name, username, email, password, mobileNo, referralCode} = req.body;
-    
-    const errors = validationResult(req);
+exports.register = catchAsyncErrors(async (req, res, next) => {
+  const { name, username, email, password, mobileNo, referralCode } = req.body;
 
-    
-    if (!errors.isEmpty()) {
-        return next(new ErrorHandler(errors.array()[0].msg, 400)); 
-    }
+  const errors = validationResult(req);
 
-    if(!name || !username || !email || !password  || !mobileNo){
-      return next(new ErrorHandler("Plsease provide all informations", 401));
-    }
+  if (!errors.isEmpty()) {
+    return next(new ErrorHandler(errors.array()[0].msg, 400));
+  }
 
-     //set referral bonus
-     if(referralCode){
-      const referBonus = await User.findOne({username:referralCode})
-      console.log(referBonus)
-    if(referBonus){
+  if (!name || !username || !email || !password || !mobileNo) {
+    return next(new ErrorHandler("Plsease provide all informations", 401));
+  }
+
+  //set referral bonus
+  if (referralCode) {
+    const referBonus = await User.findOne({ username: referralCode });
+    console.log(referBonus);
+    if (referBonus) {
       referBonus.wallet += 10;
       await referBonus.save();
-    }else{
-      return next(new ErrorHandler("Your referral id is not valid, if you don't have referral id then skip", 404))
+    } else {
+      return next(
+        new ErrorHandler(
+          "Your referral id is not valid, if you don't have referral id then skip",
+          404
+        )
+      );
     }
-    }
+  }
 
-    const newUser = await User.create({
-     name:name,
-     username: username, 
-     email:email,
-     password:password,
-     mobileNo: mobileNo,
-     referralCode:referralCode
-     
-    });
+  const newUser = await User.create({
+    name: name,
+    username: username,
+    email: email,
+    password: password,
+    mobileNo: mobileNo,
+    referralCode: referralCode,
+  });
 
-    if(newUser.referralCode != ""){
-      newUser.wallet += 5
-    }
-    
+  if (newUser.referralCode != "") {
+    newUser.wallet += 5;
+  }
 
-    await newUser.save();
-    
-    sendToken(newUser, 201, res);
- 
-    
- })
+  await newUser.save();
+
+  sendToken(newUser, 201, res);
+});
 
 //login
- exports.login = catchAsyncErrors(async(req, res, next)=>{
-    const {email, password} = req.body;
+exports.login = catchAsyncErrors(async (req, res, next) => {
+  const { email, password } = req.body;
 
-    if(!email || !password){
-        return next(new ErrorHandler("Plsease enter email & password", 401));
-    }
+  if (!email || !password) {
+    return next(new ErrorHandler("Plsease enter email & password", 401));
+  }
 
-    const user = await User.findOne({email}).select("+password")
-   
-    if(!user){
-        return next(new ErrorHandler("Invalid email or password", 401))
-    }
-    const isPasswordMatched = await user.comparePassword(password);
+  const user = await User.findOne({ email }).select("+password");
 
-    if(!isPasswordMatched){
-        return next(new ErrorHandler("Invalid Password", 401));
-    }
+  if (!user) {
+    return next(new ErrorHandler("Invalid email or password", 401));
+  }
+  const isPasswordMatched = await user.comparePassword(password);
 
-    sendToken(user, 200, res);
+  if (!isPasswordMatched) {
+    return next(new ErrorHandler("Invalid Password", 401));
+  }
 
- })
+  sendToken(user, 200, res);
+});
 
 //logout
- exports.logout = catchAsyncErrors(async(req, res, next)=>{
-    res.cookie('token', null,{
-        expires: new Date(Date.now()),
-        httpOnly: true,
-    });
+exports.logout = catchAsyncErrors(async (req, res, next) => {
+  res.cookie("token", null, {
+    expires: new Date(Date.now()),
+    httpOnly: true,
+  });
 
-    res.status(200).send({
-        success: true,
-        statusCode:200,
-        message: "Logout Successufll"
-    })
+  res.status(200).send({
+    success: true,
+    statusCode: 200,
+    message: "Logout Successufll",
+  });
+});
 
- })
+//forget passwrod
+exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
+  const user = await User.findOne({ email: req.body.email });
 
-//forget passwrod 
- exports.forgotPassword = catchAsyncErrors(async(req, res, next)=>{
-    const user = await User.findOne({email: req.body.email})
+  if (!user) {
+    return next(new ErrorHandler("User not found"), 403);
+  }
 
-    if(!user){
-        return next( new ErrorHandler("User not found"), 403)
-    }
+  //get reset password otp
+  const resetPasswordOtp = user.getForgetPasswordOtp();
 
-    //get reset password otp
-    const resetPasswordOtp = user.getForgetPasswordOtp()
+  await user.save({ validateBeforeSave: false });
 
-    await user.save({validateBeforeSave: false});
-    
-
-    const message = 
-    `
+  const message = `
   <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
     <div style="width: 100%; max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
         <p style="font-size: 16px; color: #333333; line-height: 1.6;">Hello ${user.username},</p>
@@ -135,7 +130,7 @@ exports.register = catchAsyncErrors(async(req, res, next) =>{
 </body>
 </html>
 
-    `
+    `;
 
   try {
     await sendEmail({
@@ -145,7 +140,7 @@ exports.register = catchAsyncErrors(async(req, res, next) =>{
     });
     res.status(200).send({
       success: true,
-      statusCode:200,
+      statusCode: 200,
       message: `Email sent to ${user.email} successfully!`,
     });
   } catch (error) {
@@ -155,58 +150,56 @@ exports.register = catchAsyncErrors(async(req, res, next) =>{
 
     return next(new ErrorHandler(error.message, 500));
   }
+});
 
- })
+exports.resetPasswordOtpVerify = catchAsyncErrors(async (req, res, next) => {
+  const { otp } = req.body;
 
- exports.resetPasswordOtpVerify = catchAsyncErrors(async(req, res, next )=>{
-      const {otp} = req.body;
-      
-        //otp sanitization and validation
-        if (!otp || !/^\d{6}$/.test(otp)) {
-        return next(new ErrorHandler("Invalid OTP", 400))
-    }
-    const resetPasswordOtp = crypto
+  //otp sanitization and validation
+  if (!otp || !/^\d{6}$/.test(otp)) {
+    return next(new ErrorHandler("Invalid OTP", 400));
+  }
+  const resetPasswordOtp = crypto
     .createHash("sha256")
     .update(otp)
     .digest("hex");
 
-    const user = await User.findOne({
-          resetPasswordOtp,
-          resetPasswordOtpExpire: { $gt: Date.now() },
-          
-        });
-        console.log(user)
-      
-        if (!user) {
-          return next(new ErrorHandler("Reset Password Otp is invalid or has been expired"),400);
-        }
+  const user = await User.findOne({
+    resetPasswordOtp,
+    resetPasswordOtpExpire: { $gt: Date.now() },
+  });
+  console.log(user);
 
-      res.status(200).json({
-        success:true,
-        message:"Otp verified successfully",
-        
-      })
- })
+  if (!user) {
+    return next(
+      new ErrorHandler("Reset Password Otp is invalid or has been expired"),
+      400
+    );
+  }
 
- //Reset password
+  res.status(200).json({
+    success: true,
+    message: "Otp verified successfully",
+  });
+});
+
+//Reset password
 exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
- 
-    
-    const {password} = req.body;
-    const email = req.params.email;
-   
-    const errors = validationResult(req);
+  const { password } = req.body;
+  const email = req.params.email;
 
-    if (!errors.isEmpty()) {
-        return next(new ErrorHandler(errors.array()[0].msg, 400)); 
-    }
+  const errors = validationResult(req);
 
-    const user = await User.findOne({email})
-    
-    if(!user){
-      return next(new ErrorHandler("User not found", 400))
-    }
-    
+  if (!errors.isEmpty()) {
+    return next(new ErrorHandler(errors.array()[0].msg, 400));
+  }
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return next(new ErrorHandler("User not found", 400));
+  }
+
   user.password = password;
   user.resetPasswordOtp = undefined;
   user.resetPasswordOtpExpire = undefined;
@@ -217,195 +210,195 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
 });
 
 //get all user
-exports.getAllUsers = catchAsyncErrors(async(req, res, next)=>{
+exports.getAllUsers = catchAsyncErrors(async (req, res, next) => {
   const users = await User.find({});
   res.status(200).send({
     success: true,
-    statusCode:200,
-    users
-  })
-})
+    statusCode: 200,
+    users,
+  });
+});
 
 //get a user
-exports.getAUser = catchAsyncErrors(async(req, res, next)=>{
+exports.getAUser = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findById(req.params.id);
 
-  if(!user){
-    return next(new ErrorHandler("User not found", 404))
+  if (!user) {
+    return next(new ErrorHandler("User not found", 404));
   }
 
   res.status(200).send({
     success: true,
-    statusCode:200,
-    user
-  })
-})
+    statusCode: 200,
+    user,
+  });
+});
 
 //update a user
-exports.updateUser = catchAsyncErrors(async(req, res, next)=>{
+exports.updateUser = catchAsyncErrors(async (req, res, next) => {
   let user = await User.findById(req.params.id);
 
-  if(!user){
-    return next(new ErrorHandler("User not found", 404))
+  if (!user) {
+    return next(new ErrorHandler("User not found", 404));
   }
 
   user = await User.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
-    useFindAndModify: false
-  })
+    useFindAndModify: false,
+  });
 
   res.status(200).send({
     success: true,
-    user
-  })
-})
+    user,
+  });
+});
 
-// update user profile 
+// update user profile
 exports.updateUserProfile = catchAsyncErrors(async (req, res) => {
-  
-      const userId = req.user.id; 
-            
-      let user = await User.findById(userId);
+  const userId = req.user.id;
 
-      if (!user) {
-          return res.status(404).json({ message: "User not found" });
+  let user = await User.findById(userId);
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  // Handle file uploads (profile_pic and cover_pic)
+  if (req.files) {
+    if (req.files.profile_pic) {
+      // Optionally, remove old profile pic if exists
+      if (user.profile_pic) {
+        fs.unlinkSync(user.profile_pic);
       }
+      user.profile_pic = req.files.profile_pic[0].path;
+    }
 
-      // Handle file uploads (profile_pic and cover_pic)
-      if (req.files) {
-          if (req.files.profile_pic) {
-              // Optionally, remove old profile pic if exists
-              if (user.profile_pic) {
-                  fs.unlinkSync(user.profile_pic);
-              }
-              user.profile_pic = req.files.profile_pic[0].path;
-          }
-
-          if (req.files.cover_pic) {
-              // Optionally, remove old cover pic if exists
-              if (user.cover_pic) {
-                  fs.unlinkSync(user.cover_pic);
-              }
-              user.cover_pic = req.files.cover_pic[0].path;
-          }
+    if (req.files.cover_pic) {
+      // Optionally, remove old cover pic if exists
+      if (user.cover_pic) {
+        fs.unlinkSync(user.cover_pic);
       }
+      user.cover_pic = req.files.cover_pic[0].path;
+    }
+  }
 
-      // Update other fields (if needed)
-      const {name, username,email, mobileNo } = req.body;
+  // Update other fields (if needed)
+  const { name, username, email, mobileNo } = req.body;
 
-      if (name) user.username = name;
-      if (username) user.username = username;
-      if (mobileNo) user.mobileNo = mobileNo;
-      if(email) user.email = email;
-      
-      // Save updated user data
-      await user.save();
+  if (name) user.username = name;
+  if (username) user.username = username;
+  if (mobileNo) user.mobileNo = mobileNo;
+  if (email) user.email = email;
 
-      res.status(200).json({ 
-          success: true,
-          message: "Profile updated successfully", 
-          user 
-      });
- 
-})
+  // Save updated user data
+  await user.save();
 
+  res.status(200).json({
+    success: true,
+    message: "Profile updated successfully",
+    user,
+  });
+});
 
 // delete a user
-exports.deleteUser = catchAsyncErrors(async(req, res, next) =>{
-  const user = await User.findById(req.params.id)
-  console.log(user)
-  if(!user){
-    return next(new ErrorHandler("user not found", 404))
+exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+  console.log(user);
+  if (!user) {
+    return next(new ErrorHandler("user not found", 404));
   }
 
   // deleting all images associated with user
   const images = await Image.find({ owner: user._id });
 
-    if (images.length > 0) {
-        await Image.deleteMany({ owner: user._id });
-    }
+  if (images.length > 0) {
+    await Image.deleteMany({ owner: user._id });
+  }
 
   await user.deleteOne();
 
   return res.status(203).json({
-    success:true,
-    statusCode:200,
-    message:"User Deleted Successfully!",
-    user
-  })
-})
+    success: true,
+    statusCode: 200,
+    message: "User Deleted Successfully!",
+    user,
+  });
+});
 
 //get Top sellers
-exports.getTopSellers = catchAsyncErrors(async(req, res, next)=>{
-  const topSellers = await User.find({}).sort({total_sales: -1}).limit(5).select("name profile_pic")
-  if(!topSellers){
-    return next(new ErrorHandler("Top sellers not found", 404))
+exports.getTopSellers = catchAsyncErrors(async (req, res, next) => {
+  const topSellers = await User.find({})
+    .sort({ total_sales: -1 })
+    .limit(5)
+    .select("name profile_pic");
+  if (!topSellers) {
+    return next(new ErrorHandler("Top sellers not found", 404));
   }
 
-  res.status(200).json({success: true, statusCode:200, topSellers})
-})
+  res.status(200).json({ success: true, statusCode: 200, topSellers });
+});
 
 // purchase coin
-exports.purchaseCoin = catchAsyncErrors(async(req, res, next)=>{
-  const {coinBundle} = req.body;
-  const user = await User.findById(req.user._id)
+exports.purchaseCoin = catchAsyncErrors(async (req, res, next) => {
+  const { coinBundle } = req.body;
+  const user = await User.findById(req.user._id);
 
   let newCoin = 0;
 
-  if(coinBundle === "50"){
+  if (coinBundle === "50") {
     newCoin = 50;
-  }else if(coinBundle === "100"){
+  } else if (coinBundle === "100") {
     newCoin = 100;
-  }else if(coinBundle === "500"){
+  } else if (coinBundle === "500") {
     newCoin = 500;
   }
 
-  const paymentSuccess = await processPayment(paymentDetails)
+  const paymentSuccess = await processPayment(paymentDetails);
 
-  if(paymentSuccess){
+  if (paymentSuccess) {
     user.wallet += newCoin;
     await user.save();
-    res.status(200).json({success:true, statusCode:200, message:`Successfully purchased ${newCoin} coin`})
-  }else{
-    return next(new ErrorHandler("payment not successfull"))
+    res
+      .status(200)
+      .json({
+        success: true,
+        statusCode: 200,
+        message: `Successfully purchased ${newCoin} coin`,
+      });
+  } else {
+    return next(new ErrorHandler("payment not successfull"));
   }
-
-})
+});
 
 //follow user
-exports.followUser = catchAsyncErrors(async(req, res, next)=>{
+exports.followUser = catchAsyncErrors(async (req, res, next) => {
   const followingUserId = req.params._id;
   const followersUserId = req.user_id;
 
-  const followingUser = await User.findById(followingUserId)
-  const followerUser = await User.findById(followersUserId)
+  const followingUser = await User.findById(followingUserId);
+  const followerUser = await User.findById(followersUserId);
 
-  if(!followingUser){
-      return next(new ErrorHandler("user not found", 404))
+  if (!followingUser) {
+    return next(new ErrorHandler("user not found", 404));
   }
 
   const alreadyfollowed = followingUser.followers.includes(followingUserId);
 
-  if(alreadyfollowed){
+  if (alreadyfollowed) {
     followingUser.followers.pull(followersUserId);
-    followerUser.following.pusll(followingUserId)
-     
-  }else{
+    followerUser.following.pusll(followingUserId);
+  } else {
     followingUser.followers.push(followersUserId);
     followerUser.following.push(followingUserId);
-    
   }
 
   await followingUser.save();
   await followerUser.save();
 
   res.status(200).json({
-      success:true,
-      statusCode:200,
-      message: alreadyfollowed ? "unfollow the usre" : "followed the user",
-  })
-
-})
-
-
+    success: true,
+    statusCode: 200,
+    message: alreadyfollowed ? "unfollow the usre" : "followed the user",
+  });
+});
