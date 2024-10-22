@@ -73,8 +73,9 @@ userSchema.pre("save", async function (next) {
 
 //get jwt
 userSchema.methods.getJwtToken = function () {
+  const expiresIn = Math.floor(Date.now() / 1000) + 60 * 60; // 1 hour in seconds
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.COOKIE_EXPIRE,
+    expiresIn: expiresIn,
   });
 };
 

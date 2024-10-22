@@ -359,13 +359,11 @@ exports.purchaseCoin = catchAsyncErrors(async (req, res, next) => {
   if (paymentSuccess) {
     user.wallet += newCoin;
     await user.save();
-    res
-      .status(200)
-      .json({
-        success: true,
-        statusCode: 200,
-        message: `Successfully purchased ${newCoin} coin`,
-      });
+    res.status(200).json({
+      success: true,
+      statusCode: 200,
+      message: `Successfully purchased ${newCoin} coin`,
+    });
   } else {
     return next(new ErrorHandler("payment not successfull"));
   }
