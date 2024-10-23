@@ -46,7 +46,7 @@ const userSchema = new Schema(
     liked_images: [{ type: mongoose.Schema.Types.ObjectId, ref: "Image" }],
     role: {
       type: String,
-      enum: ["user", "photographer", "buyer", "admin"],
+      enum: ["superAdmi", "admin", "moderator", "user"],
       default: "user",
     },
     followers: { type: Number, default: 0 },
@@ -75,7 +75,7 @@ userSchema.pre("save", async function (next) {
 userSchema.methods.getJwtToken = function () {
   const expiresIn = Math.floor(Date.now() / 1000) + 60 * 60; // 1 hour in seconds
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
-    expiresIn: expiresIn,
+    expiresIn: "6m",
   });
 };
 

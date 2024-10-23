@@ -55,7 +55,7 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
 
   await newUser.save();
 
-  sendToken(newUser, 201, res);
+  res.status(200).send({ success: true, newUser });
 });
 
 //login
