@@ -9,8 +9,7 @@ exports.isAuthenticated = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Please login to access this resource", 401));
   }
 
-  const token = authHeader;
-  console.log("tokent from auth header: ", token);
+  const token = authHeader.split(" ")[1];
   // Verify the token
   try {
     const decodedData = jwt.verify(token, process.env.JWT_SECRET);

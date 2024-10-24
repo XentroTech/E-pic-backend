@@ -8,6 +8,7 @@ const sendEmail = require("../utils/sendEmail.js");
 const processPayment = require("../utils/processPayment.js");
 const crypto = require("crypto");
 const { validationResult } = require("express-validator");
+const Image = require("../Models/imageModel.js");
 
 //register
 exports.register = catchAsyncErrors(async (req, res, next) => {
@@ -210,11 +211,39 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
 });
 
 //get all user
-exports.getAllUsers = catchAsyncErrors(async (req, res, next) => {
-  const users = await User.find({});
-  res.status(200).send({
-    success: true,
-    statusCode: 200,
+exports.getUsers = catchAsyncErrors(async (req, res) => {
+  const { query = "", page = 1, limit = 10 } = req.query;
+
+  let searchCriteria = {};
+  if (query) {
+    // If search query exists, search by username, email, or mobile
+    searchCriteria = {
+      $or: [
+        { username: { $regex: query, $options: "i" } }, // Case-insensitive search
+        { email: { $regex: query, $options: "i" } },
+        { mobileNo: { $regex: query } },
+      ],
+    };
+  }
+
+  // Get the total count of users matching the search criteria
+  const totalUsers = await User.countDocuments(searchCriteria);
+
+  // Find users with pagination
+  const users = await User.find(searchCriteria)
+    .skip((page - 1) * limit) // Skip previous pages
+    .limit(parseInt(limit)); // Limit the results to the number specified in limit
+
+  // If no users found
+  if (users.length === 0) {
+    return res.status(404).json({ message: "No users found" });
+  }
+
+  // Send paginated response
+  res.status(200).json({
+    totalUsers,
+    currentPage: page,
+    totalPages: Math.ceil(totalUsers / limit),
     users,
   });
 });
@@ -286,7 +315,7 @@ exports.updateUserProfile = catchAsyncErrors(async (req, res) => {
   // Update other fields (if needed)
   const { name, username, email, mobileNo } = req.body;
 
-  if (name) user.username = name;
+  if (name) user.name = name;
   if (username) user.username = username;
   if (mobileNo) user.mobileNo = mobileNo;
   if (email) user.email = email;
@@ -301,15 +330,37 @@ exports.updateUserProfile = catchAsyncErrors(async (req, res) => {
   });
 });
 
+// update user role
+exports.updateUserRole = catchAsyncErrors(async (req, res, next) => {
+  const { role } = req.body;
+  if (!role) {
+    return next(new ErrorHandler("User Role is Undefined", 404));
+  }
+  const updatedUser = await User.findByIdAndUpdate(
+    req.params.id,
+    { role },
+    { new: true, runValidators: true }
+  );
+
+  if (!updatedUser) {
+    return next(new ErrorHandler("User not found", 404));
+  }
+  console.log(`Updated User: ${updatedUser}`);
+  res.status(200).json({
+    success: true,
+    message: `User role updated successfully as ${role}`,
+    updatedUser,
+  });
+});
+
 // delete a user
 exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findById(req.params.id);
-  console.log(user);
   if (!user) {
     return next(new ErrorHandler("user not found", 404));
   }
 
-  // deleting all images associated with user
+  // deleting all images associated with the user
   const images = await Image.find({ owner: user._id });
 
   if (images.length > 0) {
@@ -323,6 +374,21 @@ exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
     statusCode: 200,
     message: "User Deleted Successfully!",
     user,
+  });
+});
+
+//deactive user
+exports.deactivateUser = catchAsyncErrors(async (req, res, next) => {
+  const userId = req.params.id;
+  if (!userId) {
+    return next(new ErrorHandler("user not found", 404));
+  }
+  const user = await User.findById(userId);
+  user.isActive = false;
+  await user.save();
+  res.status(200).send({
+    success: true,
+    message: "User Deactivated Successful!",
   });
 });
 
@@ -397,6 +463,6 @@ exports.followUser = catchAsyncErrors(async (req, res, next) => {
   res.status(200).json({
     success: true,
     statusCode: 200,
-    message: alreadyfollowed ? "unfollow the usre" : "followed the user",
+    message: alreadyfollowed ? "unfollow the user" : "followed the user",
   });
 });

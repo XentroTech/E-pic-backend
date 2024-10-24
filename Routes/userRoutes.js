@@ -14,6 +14,9 @@ const {
   updateUserProfile,
   resetPasswordOtpVerify,
   followUser,
+  updateUserRole,
+  getUsers,
+  deactivateUser,
 } = require("../Controllers/userController");
 const { loginValidator } = require("../middlewares/loginValidator");
 const { registerValidator } = require("../middlewares/registerValidator");
@@ -33,7 +36,7 @@ router.post("/forgotPassword", forgotPassword);
 router.post("/verify/resetPasswordOtp", resetPasswordOtpVerify);
 router.patch("/password/reset/:email", resetPasswordValidator, resetPassword);
 
-router.get("/getUsers", isAuthenticated, getAllUsers);
+router.get("/getUsers", isAuthenticated, getUsers);
 router.get("/getUser/:id", isAuthenticated, getAUser);
 //update user profile
 router.patch(
@@ -45,13 +48,22 @@ router.patch(
   isAuthenticated,
   updateUserProfile
 );
-// router.patch('/updateUser/:id', updateUser);
-router.delete("/deleteUser/:id", isAuthenticated, deleteUser);
+
 //follow user
 router.post("/followUser/:id", isAuthenticated, followUser);
 //get top seller
 router.get("/topSellers", isAuthenticated, getTopSellers);
 //purchase coin
 router.post("/purchaseCoin", isAuthenticated, purchaseCoin);
+
+//admin
+router.put(
+  "/admin/update/role/:id",
+  isAuthenticated,
+  // authorizeRoles("admin"),
+  updateUserRole
+);
+router.delete("/deleteUser/:id", isAuthenticated, deleteUser);
+router.post("/deactivateUser/:id", isAuthenticated, deactivateUser);
 
 module.exports = router;
