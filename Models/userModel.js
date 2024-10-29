@@ -29,6 +29,10 @@ const userSchema = new Schema(
       minLenght: [8, "Password should be 8 charechters"],
       required: [true, "Please enter your password"],
     },
+    // country: {
+    //   type: String,
+    //   required: true,
+    // },
     mobileNo: {
       type: String,
       unique: true,

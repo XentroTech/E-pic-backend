@@ -17,6 +17,8 @@ const {
   updateUserRole,
   getUsers,
   deactivateUser,
+  activateUser,
+  activeOrDeactivateUser,
 } = require("../Controllers/userController");
 const { loginValidator } = require("../middlewares/loginValidator");
 const { registerValidator } = require("../middlewares/registerValidator");
@@ -25,7 +27,7 @@ const upload = require("../middlewares/upload");
 const {
   resetPasswordValidator,
 } = require("../middlewares/resetPasswordValidator");
-const { isAuthenticated } = require("../middlewares/Auth");
+const { isAuthenticated, authorizeRoles } = require("../middlewares/Auth");
 
 const router = express.Router();
 
@@ -36,7 +38,12 @@ router.post("/forgotPassword", forgotPassword);
 router.post("/verify/resetPasswordOtp", resetPasswordOtpVerify);
 router.patch("/password/reset/:email", resetPasswordValidator, resetPassword);
 
-router.get("/getUsers", isAuthenticated, getUsers);
+router.get(
+  "/getUsers",
+  isAuthenticated,
+  authorizeRoles("admin" || "superadmin"),
+  getUsers
+);
 router.get("/getUser/:id", isAuthenticated, getAUser);
 //update user profile
 router.patch(
@@ -63,7 +70,17 @@ router.put(
   // authorizeRoles("admin"),
   updateUserRole
 );
-router.delete("/deleteUser/:id", isAuthenticated, deleteUser);
-router.post("/deactivateUser/:id", isAuthenticated, deactivateUser);
+router.delete(
+  "/deleteUser/:id",
+  isAuthenticated,
+  authorizeRoles("admin" || "superadmin"),
+  deleteUser
+);
+router.post(
+  "/activeOrDeactivateUser/:id",
+  isAuthenticated,
+  authorizeRoles("admin" || "superadmin"),
+  activeOrDeactivateUser
+);
 
 module.exports = router;

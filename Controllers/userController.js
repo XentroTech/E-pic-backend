@@ -2,7 +2,6 @@ const User = require("../Models/userModel");
 const ErrorHandler = require("../utils/errorHandler.js");
 const sendToken = require("../utils/jwtToken.js");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors.js");
-const twilio = require("twilio");
 const fs = require("fs");
 const sendEmail = require("../utils/sendEmail.js");
 const processPayment = require("../utils/processPayment.js");
@@ -15,7 +14,7 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
   const { name, username, email, password, mobileNo, referralCode } = req.body;
 
   const errors = validationResult(req);
-
+  console.log(errors.array()[0].msg);
   if (!errors.isEmpty()) {
     return next(new ErrorHandler(errors.array()[0].msg, 400));
   }
@@ -48,6 +47,7 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
     password: password,
     mobileNo: mobileNo,
     referralCode: referralCode,
+    country: "",
   });
 
   if (newUser.referralCode != "") {
@@ -69,9 +69,19 @@ exports.login = catchAsyncErrors(async (req, res, next) => {
 
   const user = await User.findOne({ email }).select("+password");
 
+  // if user is deactivated then can't login
+  if (!user.isActive) {
+    return next(
+      new ErrorHandler(
+        "Your account has been deactivated Please contact with epic support team!",
+        403
+      )
+    );
+  }
   if (!user) {
     return next(new ErrorHandler("Invalid email or password", 401));
   }
+
   const isPasswordMatched = await user.comparePassword(password);
 
   if (!isPasswordMatched) {
@@ -98,7 +108,7 @@ exports.logout = catchAsyncErrors(async (req, res, next) => {
 //forget passwrod
 exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
-
+  console.log(user);
   if (!user) {
     return next(new ErrorHandler("User not found"), 403);
   }
@@ -155,7 +165,6 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
 
 exports.resetPasswordOtpVerify = catchAsyncErrors(async (req, res, next) => {
   const { otp } = req.body;
-
   //otp sanitization and validation
   if (!otp || !/^\d{6}$/.test(otp)) {
     return next(new ErrorHandler("Invalid OTP", 400));
@@ -169,7 +178,6 @@ exports.resetPasswordOtpVerify = catchAsyncErrors(async (req, res, next) => {
     resetPasswordOtp,
     resetPasswordOtpExpire: { $gt: Date.now() },
   });
-  console.log(user);
 
   if (!user) {
     return next(
@@ -183,30 +191,36 @@ exports.resetPasswordOtpVerify = catchAsyncErrors(async (req, res, next) => {
     message: "Otp verified successfully",
   });
 });
-
-//Reset password
 exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
   const { password } = req.body;
   const email = req.params.email;
 
   const errors = validationResult(req);
 
+  // Check if there are validation errors
   if (!errors.isEmpty()) {
+    // Log the first error message only if it exists
+    console.log(
+      errors.array().length > 0 ? errors.array()[0].msg : "Validation error"
+    );
     return next(new ErrorHandler(errors.array()[0].msg, 400));
   }
 
+  // Find user by email
   const user = await User.findOne({ email });
 
   if (!user) {
     return next(new ErrorHandler("User not found", 400));
   }
 
+  // Update password and clear reset fields
   user.password = password;
   user.resetPasswordOtp = undefined;
   user.resetPasswordOtpExpire = undefined;
 
   await user.save();
 
+  // Send success response
   sendToken(user, 200, res);
 });
 
@@ -313,12 +327,13 @@ exports.updateUserProfile = catchAsyncErrors(async (req, res) => {
   }
 
   // Update other fields (if needed)
-  const { name, username, email, mobileNo } = req.body;
+  const { name, username, email, mobileNo, bio } = req.body;
 
   if (name) user.name = name;
   if (username) user.username = username;
   if (mobileNo) user.mobileNo = mobileNo;
   if (email) user.email = email;
+  if (bio) user.bio = bio;
 
   // Save updated user data
   await user.save();
@@ -377,18 +392,23 @@ exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-//deactive user
-exports.deactivateUser = catchAsyncErrors(async (req, res, next) => {
+// activate or deactivate user
+exports.activeOrDeactivateUser = catchAsyncErrors(async (req, res, next) => {
   const userId = req.params.id;
   if (!userId) {
     return next(new ErrorHandler("user not found", 404));
   }
   const user = await User.findById(userId);
-  user.isActive = false;
+  if (user.isActive === true) {
+    user.isActive = false;
+  } else {
+    user.isActive = true;
+  }
   await user.save();
   res.status(200).send({
     success: true,
-    message: "User Deactivated Successful!",
+    userId,
+    message: `User ${user.isActive ? "Activate" : "Deactivated"} Successful!`,
   });
 });
 
@@ -466,3 +486,5 @@ exports.followUser = catchAsyncErrors(async (req, res, next) => {
     message: alreadyfollowed ? "unfollow the user" : "followed the user",
   });
 });
+
+//

@@ -10,10 +10,20 @@ exports.isAuthenticated = catchAsyncErrors(async (req, res, next) => {
   }
 
   const token = authHeader.split(" ")[1];
-  // Verify the token
   try {
+    // Verify the token
     const decodedData = jwt.verify(token, process.env.JWT_SECRET);
     req.user = await User.findById(decodedData.id);
+    // Check if the user exists and is active
+    if (!req.user || !req.user.isActive) {
+      res.set("Authorization", "");
+      return next(
+        new ErrorHandler(
+          "Your account has been deactivated. Please contact support.",
+          403
+        )
+      );
+    }
     next();
   } catch (err) {
     return next(new ErrorHandler("Invalid or expired token", 401));

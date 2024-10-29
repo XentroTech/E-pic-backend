@@ -31,7 +31,7 @@ router.get("/getAnImage/:id", isAuthenticated, getAnImage);
 router.post(
   "/upload-photo",
   isAuthenticated,
-  upload.any("photos", 5),
+  upload.any("image", 5),
   uploadPhoto
 );
 // upadate image info

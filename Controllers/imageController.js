@@ -3,6 +3,9 @@ const User = require("../Models/userModel");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const ErrorHandler = require("../utils/errorHandler");
 const processPayment = require("../utils/processPayment");
+const path = require("path");
+const uploadPath = path.join(__dirname, "uploads");
+
 exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
   const imageCount = req.files.length;
 
@@ -28,7 +31,7 @@ exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("No file uploaded", 400));
   }
 
-  const { title, description, category, price } = req.body;
+  const { title, description, category } = req.body;
 
   // Store all uploaded files in the database
   const uploadedImages = await Promise.all(
@@ -36,13 +39,9 @@ exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
       const newImage = new Image({
         title: title,
         description: description,
-        // Store the file as a Buffer in MongoDB
-        image: {
-          data: file.buffer, // Save the image data as a Buffer
-          contentType: file.mimetype,
-        },
         category: category,
-        price: price,
+        // Store the file as a Buffer in MongoDB
+        image_url: `/${file.path}`,
         owner: req.user._id,
       });
 

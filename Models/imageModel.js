@@ -4,12 +4,10 @@ const imageSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
     description: { type: String },
-    image: {
-      data: Buffer,
-      contentType: String,
-    },
+    image_url: { type: String },
+    image_buffer: { type: Buffer, required: true },
     category: { type: String, required: true },
-    price: { type: Number, required: true },
+    price: { type: Number },
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     likesCount: { type: Number, default: 0 },
     sold_count: { type: Number, default: 0 },
