@@ -4,7 +4,6 @@ const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const ErrorHandler = require("../utils/errorHandler");
 const processPayment = require("../utils/processPayment");
 const path = require("path");
-const uploadPath = path.join(__dirname, "uploads");
 
 exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
   const imageCount = req.files.length;
@@ -31,7 +30,15 @@ exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("No file uploaded", 400));
   }
 
-  const { title, description, category } = req.body;
+  const {
+    title,
+    description,
+    category,
+    camera,
+    camera_model,
+    camera_lens,
+    captured_date,
+  } = req.body;
 
   // Store all uploaded files in the database
   const uploadedImages = await Promise.all(
@@ -41,8 +48,12 @@ exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
         description: description,
         category: category,
         // Store the file as a Buffer in MongoDB
-        image_url: `/${file.path}`,
+        image_url: `http://localhost:3000/uploads/${file.filename}`,
         owner: req.user._id,
+        camera,
+        camera_model,
+        camera_lens,
+        captured_date,
       });
 
       return await newImage.save();
@@ -50,7 +61,7 @@ exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
   );
 
   // Updating the total number of uploaded images for the user
-  user.uploaded_images += files.length;
+  user.uploaded_images += uploadedImages.length;
   // Updating image limit after upload
   user.image_limit -= files.length;
   await user.save();
@@ -65,22 +76,52 @@ exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
 
 // get all images
 exports.getAllImages = catchAsyncErrors(async (req, res, next) => {
-  const images = await Image.find({});
+  const { query = "", page = 1, limit = 10 } = req.query;
 
-  res.status(200).send({ success: true, statusCode: 200, images });
-});
+  let searchCriteria = {};
+  if (query) {
+    // If search query exists, search by username, email, or mobile
+    searchCriteria = {
+      $or: [
+        { userId: { $regex: query, $options: "i" } }, // Case-insensitive search
+        { email: { $regex: query, $options: "i" } },
+      ],
+    };
+  }
 
-// get most liked images
-exports.getMostLikedImages = catchAsyncErrors(async (req, res, next) => {
-  const images = await Image.find({})
-    .sort({ likesCount: -1 })
-    .limit(5)
-    .select("username profile_pic");
+  // Get the total count of image matching the search criteria
+  const totalImages = await Image.countDocuments(searchCriteria);
 
+  // Use aggregate to fetch images along with owner details
+  const images = await Image.aggregate([
+    { $match: searchCriteria }, // Match images based on search criteria
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "ownerDetails",
+      },
+    },
+    { $unwind: "$ownerDetails" },
+    {
+      $skip: (page - 1) * limit, // Skip previous pages
+    },
+    {
+      $limit: parseInt(limit), // Limit the results
+    },
+  ]);
+
+  // If no image found
+  if (images.length === 0) {
+    return next(new ErrorHandler("No Image found", 404));
+  }
+
+  // Send paginated response
   res.status(200).json({
-    success: true,
-    statusCode: 200,
-    messages: "successfully fetched images",
+    totalImages,
+    currentPage: page,
+    totalPages: Math.ceil(totalImages / limit),
     images,
   });
 });
@@ -97,6 +138,21 @@ exports.getAnImage = catchAsyncErrors(async (req, res, next) => {
     success: true,
     statusCode: 200,
     image,
+  });
+});
+
+// get most liked images
+exports.getMostLikedImages = catchAsyncErrors(async (req, res, next) => {
+  const images = await Image.find({})
+    .sort({ likesCount: -1 })
+    .limit(5)
+    .select("username profile_pic");
+
+  res.status(200).json({
+    success: true,
+    statusCode: 200,
+    messages: "successfully fetched images",
+    images,
   });
 });
 

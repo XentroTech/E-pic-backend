@@ -1,8 +1,17 @@
 const multer = require("multer");
 const path = require("path");
 
-// Set storage engine to memory storage for MongoDB upload
-const storage = multer.memoryStorage(); // Store files in memory as Buffers
+// Set storage engine for multer
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    // Directory to store the files
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    // Save with unique timestamp + original extension
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
 
 // File filter to ensure only images are uploaded
 const fileFilter = (req, file, cb) => {

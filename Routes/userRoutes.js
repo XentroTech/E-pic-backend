@@ -38,12 +38,6 @@ router.post("/forgotPassword", forgotPassword);
 router.post("/verify/resetPasswordOtp", resetPasswordOtpVerify);
 router.patch("/password/reset/:email", resetPasswordValidator, resetPassword);
 
-router.get(
-  "/getUsers",
-  isAuthenticated,
-  authorizeRoles("admin" || "superadmin"),
-  getUsers
-);
 router.get("/getUser/:id", isAuthenticated, getAUser);
 //update user profile
 router.patch(
@@ -63,23 +57,34 @@ router.get("/topSellers", isAuthenticated, getTopSellers);
 //purchase coin
 router.post("/purchaseCoin", isAuthenticated, purchaseCoin);
 
-//admin
+//admin routes
+
+//get all user
+router.get(
+  "/getUsers",
+  isAuthenticated,
+  authorizeRoles("admin", "superadmin"),
+  getUsers
+);
+//update user role
 router.put(
   "/admin/update/role/:id",
   isAuthenticated,
-  // authorizeRoles("admin"),
+  authorizeRoles("admin", "superadmin"),
   updateUserRole
 );
+// delete a user
 router.delete(
   "/deleteUser/:id",
   isAuthenticated,
-  authorizeRoles("admin" || "superadmin"),
+  authorizeRoles("admin", "superadmin"),
   deleteUser
 );
+// user activation
 router.post(
   "/activeOrDeactivateUser/:id",
   isAuthenticated,
-  authorizeRoles("admin" || "superadmin"),
+  authorizeRoles("admin", "superadmin"),
   activeOrDeactivateUser
 );
 

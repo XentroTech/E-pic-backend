@@ -10,14 +10,15 @@ const {
   likeImage,
   getAnImage,
   getMostLikedImages,
-  getUserGallery,
   getUserMarketPlaceImages,
 } = require("../Controllers/imageController");
 const { isAuthenticated } = require("../middlewares/Auth");
 
 const router = express.Router();
 
-router.get("/getAllImages", isAuthenticated, getAllImages);
+//get all images
+router.get("/getImages", isAuthenticated, getAllImages);
+
 //get user's gallery images
 router.get(
   "/getUserMarketPlaceImages",
