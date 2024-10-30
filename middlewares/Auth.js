@@ -5,6 +5,7 @@ const ErrorHandler = require("../utils/errorHandler.js");
 
 exports.isAuthenticated = catchAsyncErrors(async (req, res, next) => {
   const authHeader = req.get("Authorization");
+
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return next(new ErrorHandler("Please login to access this resource", 401));
   }

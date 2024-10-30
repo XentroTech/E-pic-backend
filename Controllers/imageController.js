@@ -5,6 +5,7 @@ const ErrorHandler = require("../utils/errorHandler");
 const processPayment = require("../utils/processPayment");
 const path = require("path");
 
+//upload photo
 exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
   const imageCount = req.files.length;
 
@@ -126,6 +127,112 @@ exports.getAllImages = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
+//get pending images
+exports.getPendingImages = catchAsyncErrors(async (req, res, next) => {
+  const { query = "", page = 1, limit = 10 } = req.query;
+
+  let searchCriteria = {};
+  if (query) {
+    // If search query exists, search by username, email, or mobile
+    searchCriteria = {
+      $or: [
+        { userId: { $regex: query, $options: "i" } }, // Case-insensitive search
+        { email: { $regex: query, $options: "i" } },
+      ],
+    };
+  }
+
+  // Get the total count of image matching the search criteria
+  const totalImages = await Image.countDocuments(searchCriteria);
+
+  // Use aggregate to fetch images along with owner details
+  const images = await Image.aggregate([
+    { $match: searchCriteria }, // Match images based on search criteria
+    { $match: { isLive: false } }, // only live images
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "ownerDetails",
+      },
+    },
+    { $unwind: "$ownerDetails" },
+    {
+      $skip: (page - 1) * limit, // Skip previous pages
+    },
+    {
+      $limit: parseInt(limit), // Limit the results
+    },
+  ]);
+
+  // If no image found
+  if (images.length === 0) {
+    return next(new ErrorHandler("No Image found", 404));
+  }
+
+  // Send paginated response
+  res.status(200).json({
+    totalImages,
+    currentPage: page,
+    totalPages: Math.ceil(totalImages / limit),
+    images,
+  });
+});
+
+//get live images
+exports.getLiveImages = catchAsyncErrors(async (req, res, next) => {
+  const { query = "", page = 1, limit = 10 } = req.query;
+
+  let searchCriteria = {};
+  if (query) {
+    // If search query exists, search by username, email, or mobile
+    searchCriteria = {
+      $or: [
+        { userId: { $regex: query, $options: "i" } }, // Case-insensitive search
+        { email: { $regex: query, $options: "i" } },
+      ],
+    };
+  }
+
+  // Get the total count of image matching the search criteria
+  const totalImages = await Image.countDocuments(searchCriteria);
+
+  // Use aggregate to fetch images along with owner details
+  const images = await Image.aggregate([
+    { $match: searchCriteria }, // Match images based on search criteria
+    { $match: { isLive: true } }, // only live images
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "ownerDetails",
+      },
+    },
+    { $unwind: "$ownerDetails" },
+    {
+      $skip: (page - 1) * limit, // Skip previous pages
+    },
+    {
+      $limit: parseInt(limit), // Limit the results
+    },
+  ]);
+
+  // If no image found
+  if (images.length === 0) {
+    return next(new ErrorHandler("No Image found", 404));
+  }
+
+  // Send paginated response
+  res.status(200).json({
+    totalImages,
+    currentPage: page,
+    totalPages: Math.ceil(totalImages / limit),
+    images,
+  });
+});
+
 // get an image
 exports.getAnImage = catchAsyncErrors(async (req, res, next) => {
   const image = await Image.findById(req.params.id);
@@ -174,6 +281,24 @@ exports.updateImage = catchAsyncErrors(async (req, res, next) => {
     success: true,
     statusCode: 200,
     image,
+  });
+});
+
+// approve image
+exports.approveImage = catchAsyncErrors(async (req, res, next) => {
+  const imageId = req.params.id;
+  console.log(imageId);
+  const image = await Image.findById({ _id: imageId });
+
+  if (!image) {
+    return next(new ErrorHandler("Image not found!"), 404);
+  }
+
+  image.isLive = true;
+  await image.save();
+  res.status(200).send({
+    success: true,
+    message: "Now Image is Live",
   });
 });
 

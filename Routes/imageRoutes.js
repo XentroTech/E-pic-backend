@@ -11,6 +11,9 @@ const {
   getAnImage,
   getMostLikedImages,
   getUserMarketPlaceImages,
+  approveImage,
+  getPendingImages,
+  getLiveImages,
 } = require("../Controllers/imageController");
 const { isAuthenticated } = require("../middlewares/Auth");
 
@@ -18,7 +21,10 @@ const router = express.Router();
 
 //get all images
 router.get("/getImages", isAuthenticated, getAllImages);
-
+// get pending images
+router.get("/getPendingImages", isAuthenticated, getPendingImages);
+// get Live images
+router.get("/getLiveImages", isAuthenticated, getLiveImages);
 //get user's gallery images
 router.get(
   "/getUserMarketPlaceImages",
@@ -28,7 +34,9 @@ router.get(
 //get mostLiked images
 router.get("/getMostLikedImages", isAuthenticated, getMostLikedImages);
 router.get("/getAnImage/:id", isAuthenticated, getAnImage);
-//puload new image
+// approve image
+router.patch("/image/approveImage/:id", isAuthenticated, approveImage);
+//upload new image
 router.post(
   "/upload-photo",
   isAuthenticated,

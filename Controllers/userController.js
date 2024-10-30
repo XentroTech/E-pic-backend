@@ -11,7 +11,8 @@ const Image = require("../Models/imageModel.js");
 
 //register
 exports.register = catchAsyncErrors(async (req, res, next) => {
-  const { name, username, email, password, mobileNo, referralCode } = req.body;
+  const { name, username, email, password, mobileNo, referralCode, country } =
+    req.body;
 
   const errors = validationResult(req);
   console.log(errors.array()[0].msg);
@@ -19,7 +20,7 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler(errors.array()[0].msg, 400));
   }
 
-  if (!name || !username || !email || !password || !mobileNo) {
+  if (!name || !username || !email || !password || !mobileNo || country) {
     return next(new ErrorHandler("Plsease provide all informations", 401));
   }
 
@@ -130,7 +131,7 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
         <p style="font-size: 24px; color: #00674F; font-weight: bold; margin: 20px 0;">${resetPasswordOtp}</p>
 
         <p style="font-size: 16px; color: #333333; line-height: 1.6;">
-            This OTP is valid for only 15 minutes. If you did not request a password reset, please ignore this email and your account will remain secure.
+            This OTP is valid for only 5 minutes. If you did not request a password reset, please ignore this email and your account will remain secure.
         </p>
 
         <p style="font-size: 14px; color: #888888; margin-top: 20px; line-height: 1.6;">
@@ -296,7 +297,7 @@ exports.updateUser = catchAsyncErrors(async (req, res, next) => {
     user,
   });
 });
-
+const BASE_URL = "http://localhost:3000/";
 // update user profile
 exports.updateUserProfile = catchAsyncErrors(async (req, res) => {
   const userId = req.user.id;
@@ -307,33 +308,36 @@ exports.updateUserProfile = catchAsyncErrors(async (req, res) => {
     return res.status(404).json({ message: "User not found" });
   }
 
-  // Handle file uploads (profile_pic and cover_pic)
   if (req.files) {
     if (req.files.profile_pic) {
       // Optionally, remove old profile pic if exists
       if (user.profile_pic) {
-        fs.unlinkSync(user.profile_pic);
+        fs.unlinkSync(user.profile_pic.replace(BASE_URL, ""));
       }
-      user.profile_pic = req.files.profile_pic[0].path;
+      // Add base URL and convert backslashes to forward slashes
+      user.profile_pic =
+        BASE_URL + req.files.profile_pic[0].path.replace(/\\/g, "/");
     }
 
     if (req.files.cover_pic) {
       // Optionally, remove old cover pic if exists
       if (user.cover_pic) {
-        fs.unlinkSync(user.cover_pic);
+        fs.unlinkSync(user.cover_pic.replace(BASE_URL, ""));
       }
-      user.cover_pic = req.files.cover_pic[0].path;
+      user.cover_pic =
+        BASE_URL + req.files.cover_pic[0].path.replace(/\\/g, "/");
     }
   }
 
   // Update other fields (if needed)
-  const { name, username, email, mobileNo, bio } = req.body;
+  const { name, username, email, mobileNo, bio, country } = req.body;
 
   if (name) user.name = name;
   if (username) user.username = username;
   if (mobileNo) user.mobileNo = mobileNo;
   if (email) user.email = email;
   if (bio) user.bio = bio;
+  if (country) user.country = country;
 
   // Save updated user data
   await user.save();
