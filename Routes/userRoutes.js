@@ -16,8 +16,6 @@ const {
   followUser,
   updateUserRole,
   getUsers,
-  deactivateUser,
-  activateUser,
   activeOrDeactivateUser,
 } = require("../Controllers/userController");
 const { loginValidator } = require("../middlewares/loginValidator");
@@ -38,6 +36,7 @@ router.post("/forgotPassword", forgotPassword);
 router.post("/verify/resetPasswordOtp", resetPasswordOtpVerify);
 router.patch("/password/reset/:email", resetPasswordValidator, resetPassword);
 
+//get an user
 router.get("/getUser/:id", isAuthenticated, getAUser);
 //update user profile
 router.patch(

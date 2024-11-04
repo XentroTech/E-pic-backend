@@ -10,7 +10,11 @@ const imageRoutes = require("./Routes/imageRoutes");
 const errorMiddleware = require("./utils/error");
 const path = require("path");
 const uploadPath = path.join(__dirname, "uploads");
-
+const admin = require("firebase-admin");
+const serviceAccount = require("./firebase-service-account.json");
+const imageSpaceRoute = require("./Routes/imageSpaceRoutes");
+const coinRoutes = require("./Routes/coinRoutes");
+const prizeRoutes = require("./Routes/prizeRoutes");
 // Initialize dotenv before using any environment variables
 dotenv.config();
 
@@ -18,12 +22,23 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// initialize firebase admin
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
 app.use(express.json());
 app.use("/uploads", express.static(uploadPath));
 
 // Middlewares
-app.use(cors());
+const corsOptions = {
+  origin: "http://localhost:5173",
+  methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+  credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Database connection
@@ -36,6 +51,9 @@ app.get("/", (req, res) => {
 app.use("/api/v1/", user);
 app.use("/api/v1/", otp);
 app.use("/api/v1/", imageRoutes);
+app.use("/api/v1/", imageSpaceRoute);
+app.use("/api/v1/", coinRoutes);
+app.use("/api/v1/", prizeRoutes);
 
 // Error middleware
 app.use(errorMiddleware);

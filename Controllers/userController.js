@@ -21,13 +21,12 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
   }
 
   if (!name || !username || !email || !password || !mobileNo || country) {
-    return next(new ErrorHandler("Plsease provide all informations", 401));
+    return next(new ErrorHandler("Please provide all information", 401));
   }
 
   //set referral bonus
   if (referralCode) {
     const referBonus = await User.findOne({ username: referralCode });
-    console.log(referBonus);
     if (referBonus) {
       referBonus.wallet += 10;
       await referBonus.save();
@@ -65,7 +64,7 @@ exports.login = catchAsyncErrors(async (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return next(new ErrorHandler("Plsease enter email & password", 401));
+    return next(new ErrorHandler("Please enter email & password", 401));
   }
 
   const user = await User.findOne({ email }).select("+password");
@@ -102,14 +101,13 @@ exports.logout = catchAsyncErrors(async (req, res, next) => {
   res.status(200).send({
     success: true,
     statusCode: 200,
-    message: "Logout Successufll",
+    message: "Logout ",
   });
 });
 
-//forget passwrod
+//forget password
 exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
-  console.log(user);
   if (!user) {
     return next(new ErrorHandler("User not found"), 403);
   }
@@ -228,30 +226,41 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
 //get all user
 exports.getUsers = catchAsyncErrors(async (req, res) => {
   const { query = "", page = 1, limit = 10 } = req.query;
+  const requestingUserRole = req.user ? req.user.role : null;
 
-  let searchCriteria = {};
+  let searchCriteria = [];
+
+  // If the user is an admin, exclude superadmins and admins from the results
+  if (requestingUserRole === "admin") {
+    searchCriteria.push({ role: { $nin: ["superadmin", "admin"] } });
+  }
+
+  // If search query exists, search by username, email, or mobile
   if (query) {
-    // If search query exists, search by username, email, or mobile
-    searchCriteria = {
+    searchCriteria.push({
       $or: [
         { username: { $regex: query, $options: "i" } }, // Case-insensitive search
         { email: { $regex: query, $options: "i" } },
         { mobileNo: { $regex: query } },
       ],
-    };
+    });
   }
 
+  // Combine search criteria using $and if there are any criteria
+  const finalCriteria =
+    searchCriteria.length > 0 ? { $and: searchCriteria } : {};
+
   // Get the total count of users matching the search criteria
-  const totalUsers = await User.countDocuments(searchCriteria);
+  const totalUsers = await User.countDocuments(finalCriteria);
 
   // Find users with pagination
-  const users = await User.find(searchCriteria)
+  const users = await User.find(finalCriteria)
     .skip((page - 1) * limit) // Skip previous pages
     .limit(parseInt(limit)); // Limit the results to the number specified in limit
 
   // If no users found
   if (users.length === 0) {
-    return res.status(404).json({ message: "No users found" });
+    return res.status(404).json({ message: "user not found" });
   }
 
   // Send paginated response
@@ -301,7 +310,8 @@ const BASE_URL = "http://localhost:3000/";
 // update user profile
 exports.updateUserProfile = catchAsyncErrors(async (req, res) => {
   const userId = req.user.id;
-
+  console.log(req.body);
+  console.log(req.files);
   let user = await User.findById(userId);
 
   if (!user) {
@@ -364,7 +374,6 @@ exports.updateUserRole = catchAsyncErrors(async (req, res, next) => {
   if (!updatedUser) {
     return next(new ErrorHandler("User not found", 404));
   }
-  console.log(`Updated User: ${updatedUser}`);
   res.status(200).json({
     success: true,
     message: `User role updated successfully as ${role}`,
@@ -420,7 +429,7 @@ exports.activeOrDeactivateUser = catchAsyncErrors(async (req, res, next) => {
 exports.getTopSellers = catchAsyncErrors(async (req, res, next) => {
   const topSellers = await User.find({})
     .sort({ total_sales: -1 })
-    .limit(5)
+    .limit(10)
     .select("name profile_pic");
   if (!topSellers) {
     return next(new ErrorHandler("Top sellers not found", 404));
@@ -455,7 +464,7 @@ exports.purchaseCoin = catchAsyncErrors(async (req, res, next) => {
       message: `Successfully purchased ${newCoin} coin`,
     });
   } else {
-    return next(new ErrorHandler("payment not successfull"));
+    return next(new ErrorHandler("payment not successful"));
   }
 });
 
@@ -471,11 +480,11 @@ exports.followUser = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("user not found", 404));
   }
 
-  const alreadyfollowed = followingUser.followers.includes(followingUserId);
+  const alreadyFollowed = followingUser.followers.includes(followingUserId);
 
-  if (alreadyfollowed) {
+  if (alreadyFollowed) {
     followingUser.followers.pull(followersUserId);
-    followerUser.following.pusll(followingUserId);
+    followerUser.following.pull(followingUserId);
   } else {
     followingUser.followers.push(followersUserId);
     followerUser.following.push(followingUserId);
@@ -487,7 +496,7 @@ exports.followUser = catchAsyncErrors(async (req, res, next) => {
   res.status(200).json({
     success: true,
     statusCode: 200,
-    message: alreadyfollowed ? "unfollow the user" : "followed the user",
+    message: alreadyFollowed ? "un follow the user" : "followed the user",
   });
 });
 

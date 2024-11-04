@@ -13,7 +13,7 @@ exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
   if (!user) {
     return next(new ErrorHandler("User not found", 400));
   }
-  if (imageCount >= user.image_limit) {
+  if (imageCount > user.image_limit) {
     return next(
       new ErrorHandler(
         "Your image limit exceeds, please purchase more space",
@@ -243,7 +243,6 @@ exports.getAnImage = catchAsyncErrors(async (req, res, next) => {
 
   res.status(200).send({
     success: true,
-    statusCode: 200,
     image,
   });
 });
@@ -274,7 +273,7 @@ exports.updateImage = catchAsyncErrors(async (req, res, next) => {
   image = await Image.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
-    useFindAndModifie: false,
+    useFindAndModify: false,
   });
 
   res.status(200).send({
@@ -287,7 +286,6 @@ exports.updateImage = catchAsyncErrors(async (req, res, next) => {
 // approve image
 exports.approveImage = catchAsyncErrors(async (req, res, next) => {
   const imageId = req.params.id;
-  console.log(imageId);
   const image = await Image.findById({ _id: imageId });
 
   if (!image) {
@@ -305,7 +303,6 @@ exports.approveImage = catchAsyncErrors(async (req, res, next) => {
 // if need then delete an image
 exports.deleteImage = catchAsyncErrors(async (req, res, next) => {
   const image = await Image.findById(req.params.id);
-  console.log(image.owner);
   if (!image) {
     return next(new ErrorHandler("Image not found", 404));
   }
@@ -314,7 +311,6 @@ exports.deleteImage = catchAsyncErrors(async (req, res, next) => {
   if (!user) {
     return next(new ErrorHandler("image owner not found", 404));
   }
-  console.log(user);
   user.uploaded_images -= 1;
   user.image_limit += 1;
   await image.deleteOne();
@@ -354,7 +350,7 @@ exports.likeImage = catchAsyncErrors(async (req, res, next) => {
   res.status(200).json({
     success: true,
     statusCode: 200,
-    message: alreadyLiked ? "unliked the image" : "liked the image",
+    message: alreadyLiked ? "unlike the image" : "liked the image",
     likesCount: image.likes.length,
   });
 });
@@ -374,7 +370,7 @@ exports.purchaseImage = catchAsyncErrors(async (req, res, next) => {
   // updating sold count of purchased image
   image.sold_count += 1;
   //updating image owner's total_sales
-  image.owner.total_salse += price;
+  image.owner.total_sells += price;
 
   await image.save();
   await user.save();
@@ -397,37 +393,7 @@ exports.getUserMarketPlaceImages = catchAsyncErrors(async (req, res, next) => {
   }
 
   res.status(200).send({
-    success: ture,
+    success: true,
     images,
   });
-});
-
-// purchase spaces
-exports.purchaseSpace = catchAsyncErrors(async (req, res, next) => {
-  const { spaceBundle, paymentDetails } = req.body;
-
-  let newSpace = 0;
-
-  if (spaceBundle === "10") {
-    newSpace = 10;
-  } else if (spaceBundle === "50") {
-    newSpace = 50;
-  } else if (spaceBundle === "100") {
-    newSpace = 100;
-  }
-
-  const paymentSuccess = processPayment(paymentDetails);
-
-  if (paymentSuccess) {
-    const user = await User.findById(req.user._id);
-    user.image_limit += newSpace;
-    await user.save();
-    res.status(200).json({
-      success: true,
-      statusCode: 200,
-      message: `Successfully purchased ${newSpace} spaces`,
-    });
-  } else {
-    return next(new ErrorHandler("payment not successfull", 401));
-  }
 });

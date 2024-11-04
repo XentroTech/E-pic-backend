@@ -19,7 +19,12 @@ const fileFilter = (req, file, cb) => {
   const extname = allowedFileTypes.test(
     path.extname(file.originalname).toLowerCase()
   );
-  const mimetype = allowedFileTypes.test(file.mimetype);
+  const mimetype =
+    allowedFileTypes.test(file.mimetype) ||
+    file.mimetype === "application/octet-stream";
+
+  console.log("File Mimetype:", file.mimetype);
+  console.log("File Originalname:", file.originalname);
 
   if (mimetype && extname) {
     return cb(null, true);

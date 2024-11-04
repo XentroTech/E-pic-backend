@@ -1,54 +1,68 @@
-const Prize = require('../Models/prizeModel');
-const catchAsyncErrors = require('../middlewares/catchAsyncErrors');
-const ErrorHandler = require('../utils/errorHandler');
+const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
+const Prize = require("../Models/prizeModel");
+const ErrorHandler = require("../utils/errorHandler");
+const User = require("../Models/userModel");
 
+//create prize info
+exports.createPrizeInfo = catchAsyncErrors(async (req, res, next) => {
+  const { title, position, image_url } = req.body;
+  const prizeInfo = await Prize({
+    title,
+    position,
+    image_url,
+  });
 
-exports.getPrizes = catchAsyncErrors(async(req, res, next)=>{
-    const prizes = Prize.find({});
+  await prizeInfo.save();
 
-    if(!prizes){
-        return next(new ErrorHandler("prize not found", 404))
-    }
+  res.status(200).json({
+    success: true,
+    message: "Prize info created successfully!",
+    prizeInfo,
+  });
+});
 
-    res.status(200).json({
-        success: ture,
-        statusCode:200,
-        prizes
-    })
-})
+// get prize info
+exports.getPrizeInfo = catchAsyncErrors(async (req, res, next) => {
+  const prizeInfo = await Prize.find({});
 
-exports.updatePrize = catchAsyncErrors(async(req, res, next) =>{
-    const prize = await Prize.findById(req.params.id)
+  res.status(200).json({
+    success: true,
+    prizeInfo,
+  });
+});
 
-    if(!prize){
-        return next(new ErrorHandler("prize not found", 404))
-    }
+//update prize info
+exports.updatePrizeInfo = catchAsyncErrors(async (req, res, next) => {
+  const { id } = req.params;
 
-    const updatedPrize = await Prize.findByIdAndUpdate(req.prams.id, req.body, {
-        new:true,
-        runValidator:true
-    })
+  const updatedPrizeInfo = await Prize.findByIdAndUpdate(id, req.body, {
+    new: true,
+    runValidators: true,
+  });
 
-    res.status(201).json({
-        success:ture,
-        statusCode:200,
-        message:"updated",
-        updatedPrize
-    })
-})
+  if (!updatedPrizeInfo) {
+    return res
+      .status(404)
+      .json({ success: false, message: "Prize info not found" });
+  }
 
-exports.deletePrize = catchAsyncErrors(async(req, res, next) =>{
-    const prize = await Prize.findById(req.params.id)
+  res.status(200).json({
+    success: true,
+    updatedPrizeInfo,
+  });
+});
 
-    if(!prize){
-        return next(new ErrorHandler("prize not found", 404))
-    }
+// delete prize info
+exports.deletePrizeInfo = catchAsyncErrors(async (req, res, next) => {
+  const info = await Prize.findById(req.params.id);
 
-    await prize.remove();
-    res.status(201).json({
-        success:ture,
-        statusCode:201,
-        message:"deleted successfully",
-        prize
-    })
-})
+  if (!info) {
+    return next(new ErrorHandler("Prize Info not found", 404));
+  }
+
+  await info.deleteOne();
+  res.status(200).json({
+    success: true,
+    message: "successfully deleted",
+  });
+});

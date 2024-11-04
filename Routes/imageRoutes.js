@@ -43,15 +43,15 @@ router.post(
   upload.any("image", 5),
   uploadPhoto
 );
-// upadate image info
+// update image info
 router.patch("/image/update/:id", isAuthenticated, updateImage);
 //delete image
 router.delete("/image/delete/:id", isAuthenticated, deleteImage);
 
 router.post("/like/:imageId", isAuthenticated, likeImage);
-//purchaes image
+//purchase image
 router.post("/purchaseImage", isAuthenticated, purchaseImage);
 //purchase space
-router.post("/purchaseSpace", isAuthenticated, purchaseSpace);
+// router.post("/purchaseSpace", isAuthenticated, purchaseSpace);
 
 module.exports = router;
