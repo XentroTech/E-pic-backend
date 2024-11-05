@@ -18,7 +18,10 @@ exports.getTopSellers = catchAsyncErrors(async (req, res, next) => {
 
 // get best selling images
 exports.getBestSellingImages = catchAsyncErrors(async (req, res, next) => {
-  const images = await Image.find({}).sort({ sold_count: -1 }).limit(10);
+  const images = await Image.find({})
+    .sort({ sold_count: -1 })
+    .limit(10)
+    .populate("owner", "name profile_pic");
   if (!images) {
     return next(new ErrorHandler("Images not found", 404));
   }
@@ -51,6 +54,43 @@ exports.getWeeklyTopSellingImages = catchAsyncErrors(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
+    images,
+  });
+});
+
+// for you
+exports.getForYouImages = catchAsyncErrors(async (req, res, next) => {
+  // Find the user and get their liked images with categories
+  const user = await User.findById(req.user._id).populate(
+    "liked_images",
+    "category"
+  );
+
+  let images = [];
+
+  if (user.liked_images && user.liked_images.length > 0) {
+    // User has liked images, extract unique categories
+    const categories = [
+      ...new Set(user.liked_images.map((image) => image.category)),
+    ];
+
+    // Fetch images from those categories, excluding the user's own liked images
+    images = await Image.find({
+      category: { $in: categories },
+      _id: { $nin: user.liked_images }, // Exclude already liked images
+    }).limit(20); // Limit to a reasonable number
+  } else {
+    // User has not liked any images, fetch random images
+    images = await Image.aggregate([{ $sample: { size: 20 } }]);
+  }
+
+  res.status(200).json({
+    success: true,
+    statusCode: 200,
+    message:
+      user.liked_images.length > 0
+        ? "Successfully fetched 'For You' images"
+        : "Showing random images",
     images,
   });
 });

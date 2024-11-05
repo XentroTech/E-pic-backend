@@ -387,6 +387,12 @@ exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
   if (!user) {
     return next(new ErrorHandler("user not found", 404));
   }
+  console.log(user);
+  //super admin id can't delete
+
+  if (user.role === "superadmin") {
+    return next(new ErrorHandler("Murubbi Murubbi uhuhu.."));
+  }
 
   // deleting all images associated with the user
   const images = await Image.find({ owner: user._id });

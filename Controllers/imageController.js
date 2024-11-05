@@ -250,9 +250,12 @@ exports.getAnImage = catchAsyncErrors(async (req, res, next) => {
 // get most liked images
 exports.getMostLikedImages = catchAsyncErrors(async (req, res, next) => {
   const images = await Image.find({})
+
     .sort({ likesCount: -1 })
-    .limit(5)
-    .select("username profile_pic");
+    .limit(10)
+    .populate("owner", "name profile_pic");
+
+  console.log(images);
 
   res.status(200).json({
     success: true,
