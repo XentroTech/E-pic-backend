@@ -16,6 +16,7 @@ const imageSpaceRoute = require("./Routes/imageSpaceRoutes");
 const coinRoutes = require("./Routes/coinRoutes");
 const prizeRoutes = require("./Routes/prizeRoutes");
 const categoryRoutes = require("./Routes/categoryRoutes");
+const homeRoutes = require("./Routes/homeRoutes");
 
 // Initialize dotenv before using any environment variables
 dotenv.config();
@@ -57,6 +58,7 @@ app.use("/api/v1/", imageSpaceRoute);
 app.use("/api/v1/", coinRoutes);
 app.use("/api/v1/", prizeRoutes);
 app.use("/api/v1/", categoryRoutes);
+app.use("/api/v1/", homeRoutes);
 
 // Error middleware
 app.use(errorMiddleware);

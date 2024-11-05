@@ -32,7 +32,7 @@ router.get(
   getUserMarketPlaceImages
 );
 //get mostLiked images
-router.get("/getMostLikedImages", isAuthenticated, getMostLikedImages);
+router.get("/getMostLikedImages", getMostLikedImages);
 router.get("/getAnImage/:id", isAuthenticated, getAnImage);
 // approve image
 router.patch("/image/approveImage/:id", isAuthenticated, approveImage);
