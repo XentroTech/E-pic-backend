@@ -59,11 +59,23 @@ exports.getPrizeInfo = catchAsyncErrors(async (req, res, next) => {
 //update prize info
 exports.updatePrizeInfo = catchAsyncErrors(async (req, res, next) => {
   const { id } = req.params;
+  const prizeInfo = await Prize.findById(id);
 
-  const updatedPrizeInfo = await Prize.findByIdAndUpdate(id, req.body, {
-    new: true,
-    runValidators: true,
-  });
+  if (!prizeInfo) {
+    return next(new ErrorHandler("Prize Info not found!", 404));
+  }
+  let image_url = prizeInfo.image_url;
+  if (req.files && req.files.image_url) {
+    image_url = BASE_URL + req.files.image_url[0].path.replace(/\\/g, "/");
+  }
+  const updatedPrizeInfo = await Prize.findByIdAndUpdate(
+    id,
+    { ...req.body, image_url },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
 
   if (!updatedPrizeInfo) {
     return res

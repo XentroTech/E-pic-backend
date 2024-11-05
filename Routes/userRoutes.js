@@ -51,8 +51,8 @@ router.patch(
 
 //follow user
 router.post("/followUser/:id", isAuthenticated, followUser);
-//get top seller
-router.get("/topSellers", isAuthenticated, getTopSellers);
+// //get top seller
+// router.get("/topSellers", isAuthenticated, getTopSellers);
 //purchase coin
 router.post("/purchaseCoin", isAuthenticated, purchaseCoin);
 

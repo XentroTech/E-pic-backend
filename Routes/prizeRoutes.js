@@ -16,6 +16,11 @@ router.post(
   createPrizeInfo
 );
 router.get("/prize", isAuthenticated, getPrizeInfo);
-router.patch("/prize/:id", isAuthenticated, updatePrizeInfo);
+router.patch(
+  "/prize/:id",
+  upload.fields([{ name: "image_url", maxCount: 1 }]),
+  isAuthenticated,
+  updatePrizeInfo
+);
 router.delete("/prize/:id", isAuthenticated, deletePrizeInfo);
 module.exports = router;
