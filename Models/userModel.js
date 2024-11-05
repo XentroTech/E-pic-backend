@@ -48,7 +48,7 @@ const userSchema = new Schema(
     image_limit: { type: Number, default: 5 },
     uploaded_images: { type: Number, default: 0 },
     total_likes: { type: Number, default: 0 },
-    total_sells: { type: Number, default: 0 },
+    total_sales: { type: Number, default: 0 },
     wallet: { type: Number, default: 0 },
     liked_images: [
       { type: mongoose.Schema.Types.ObjectId, ref: "Image", default: [] },

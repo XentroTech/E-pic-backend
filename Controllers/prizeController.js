@@ -4,21 +4,46 @@ const ErrorHandler = require("../utils/errorHandler");
 const User = require("../Models/userModel");
 
 //create prize info
+const BASE_URL = "http://localhost:3000/";
 exports.createPrizeInfo = catchAsyncErrors(async (req, res, next) => {
-  const { title, position, image_url } = req.body;
-  const prizeInfo = await Prize({
-    title,
-    position,
-    image_url,
-  });
+  let { title, position, image_url } = req.body;
 
-  await prizeInfo.save();
+  try {
+    // Process image if included
+    if (req.files && req.files.image_url) {
+      image_url = BASE_URL + req.files.image_url[0].path.replace(/\\/g, "/");
+    }
 
-  res.status(200).json({
-    success: true,
-    message: "Prize info created successfully!",
-    prizeInfo,
-  });
+    // Ensure required fields are not empty
+    if (!title || !position || !image_url) {
+      return res.status(400).json({
+        success: false,
+        message: "Title, position, and image URL are required.",
+      });
+    }
+
+    // Create new prize info
+    const prizeInfo = new Prize({
+      title,
+      position,
+      image_url,
+    });
+
+    await prizeInfo.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Prize info created successfully!",
+      prizeInfo,
+    });
+  } catch (error) {
+    console.error("Error in createPrizeInfo:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create prize info.",
+      error: error.message,
+    });
+  }
 });
 
 // get prize info

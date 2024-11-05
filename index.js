@@ -15,6 +15,7 @@ const serviceAccount = require("./firebase-service-account.json");
 const imageSpaceRoute = require("./Routes/imageSpaceRoutes");
 const coinRoutes = require("./Routes/coinRoutes");
 const prizeRoutes = require("./Routes/prizeRoutes");
+
 // Initialize dotenv before using any environment variables
 dotenv.config();
 
