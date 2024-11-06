@@ -20,25 +20,21 @@ const { isAuthenticated } = require("../middlewares/Auth");
 const router = express.Router();
 
 //get all images
-router.get("/getImages", isAuthenticated, getAllImages);
+router.get("/image/all", isAuthenticated, getAllImages);
 // get pending images
-router.get("/getPendingImages", isAuthenticated, getPendingImages);
+router.get("/image/pending", isAuthenticated, getPendingImages);
 // get Live images
-router.get("/getLiveImages", isAuthenticated, getLiveImages);
+router.get("/image/live", isAuthenticated, getLiveImages);
 //get user's gallery images
-router.get(
-  "/getUserMarketPlaceImages",
-  isAuthenticated,
-  getUserMarketPlaceImages
-);
+router.get("/image/marketPlace", isAuthenticated, getUserMarketPlaceImages);
 //get mostLiked images
-router.get("/getMostLikedImages", getMostLikedImages);
-router.get("/getAnImage/:id", isAuthenticated, getAnImage);
+router.get("/image/mostLiked", getMostLikedImages);
+router.get("/image/:id", isAuthenticated, getAnImage);
 // approve image
 router.patch("/image/approveImage/:id", isAuthenticated, approveImage);
 //upload new image
 router.post(
-  "/upload-photo",
+  "/image/upload",
   isAuthenticated,
   upload.any("image", 5),
   uploadPhoto
@@ -48,9 +44,9 @@ router.patch("/image/update/:id", isAuthenticated, updateImage);
 //delete image
 router.delete("/image/delete/:id", isAuthenticated, deleteImage);
 
-router.post("/like/:imageId", isAuthenticated, likeImage);
+router.post("/image/like/:id", isAuthenticated, likeImage);
 //purchase image
-router.post("/purchaseImage", isAuthenticated, purchaseImage);
+router.post("/image/purchase", isAuthenticated, purchaseImage);
 //purchase space
 // router.post("/purchaseSpace", isAuthenticated, purchaseSpace);
 

@@ -46,6 +46,7 @@ exports.getWeeklyTopSellingImages = catchAsyncErrors(async (req, res, next) => {
     uploaded_at: { $gte: startWeek, $lte: endWeek },
   })
     .sort({ sold_count: -1 }) // Sort by sold count in descending order
+    .populate("owner", "name profile_pic")
     .limit(10); // Limit to top 10 images
 
   if (!images || images.length === 0) {
@@ -78,7 +79,9 @@ exports.getForYouImages = catchAsyncErrors(async (req, res, next) => {
     images = await Image.find({
       category: { $in: categories },
       _id: { $nin: user.liked_images }, // Exclude already liked images
-    }).limit(20); // Limit to a reasonable number
+    })
+      .populate("owner", "name profile_pic")
+      .limit(20); // Limit to a reasonable number
   } else {
     // User has not liked any images, fetch random images
     images = await Image.aggregate([{ $sample: { size: 20 } }]);

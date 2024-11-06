@@ -37,10 +37,10 @@ router.post("/verify/resetPasswordOtp", resetPasswordOtpVerify);
 router.patch("/password/reset/:email", resetPasswordValidator, resetPassword);
 
 //get an user
-router.get("/getUser/:id", isAuthenticated, getAUser);
+router.get("/user/:id", isAuthenticated, getAUser);
 //update user profile
 router.patch(
-  "/updateProfile",
+  "/user",
   upload.fields([
     { name: "profile_pic", maxCount: 1 },
     { name: "cover_pic", maxCount: 1 },
@@ -50,7 +50,7 @@ router.patch(
 );
 
 //follow user
-router.post("/followUser/:id", isAuthenticated, followUser);
+router.post("/user/follow/:id", isAuthenticated, followUser);
 // //get top seller
 // router.get("/topSellers", isAuthenticated, getTopSellers);
 //purchase coin
@@ -60,7 +60,7 @@ router.post("/purchaseCoin", isAuthenticated, purchaseCoin);
 
 //get all user
 router.get(
-  "/getUsers",
+  "/user",
   isAuthenticated,
   authorizeRoles("admin", "superadmin"),
   getUsers
@@ -74,14 +74,14 @@ router.put(
 );
 // delete a user
 router.delete(
-  "/deleteUser/:id",
+  "/user/:id",
   isAuthenticated,
   authorizeRoles("admin", "superadmin"),
   deleteUser
 );
 // user activation
 router.post(
-  "/activeOrDeactivateUser/:id",
+  "/user/activation/:id",
   isAuthenticated,
   authorizeRoles("admin", "superadmin"),
   activeOrDeactivateUser

@@ -15,7 +15,7 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
     req.body;
 
   const errors = validationResult(req);
-  console.log(errors.array()[0].msg);
+  // console.log(errors.array()[0].msg);
   if (!errors.isEmpty()) {
     return next(new ErrorHandler(errors.array()[0].msg, 400));
   }
@@ -306,7 +306,7 @@ exports.updateUser = catchAsyncErrors(async (req, res, next) => {
     user,
   });
 });
-const BASE_URL = "http://localhost:3000/";
+const BASE_URL = "http://192.168.0.8:3000/";
 // update user profile
 exports.updateUserProfile = catchAsyncErrors(async (req, res) => {
   const userId = req.user.id;
@@ -387,9 +387,7 @@ exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
   if (!user) {
     return next(new ErrorHandler("user not found", 404));
   }
-  console.log(user);
-  //super admin id can't delete
-
+  //super admin id can't be deleted
   if (user.role === "superadmin") {
     return next(new ErrorHandler("Murubbi Murubbi uhuhu.."));
   }
