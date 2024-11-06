@@ -26,27 +26,36 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
-      minLenght: [8, "Password should be 8 charechters"],
+      minLength: [8, "Password should be 8 characters"],
       required: [true, "Please enter your password"],
     },
+    // country: {
+    //   type: String,
+    //   required: true,
+    // },
     mobileNo: {
-      type: Number,
+      type: String,
       unique: true,
       required: [true, "Please enter your mobile number"],
     },
+    bio: {
+      type: String,
+    },
     referralCode: { type: String, default: "" },
     // referredUsers:[{type: mongoose.Schema.TypesObjectId, ref:'User'}],
-    profile_pic: { type: String },
-    cover_pic: { type: String },
+    profile_pic: { type: String, default: "" },
+    cover_pic: { type: String, default: "" },
     image_limit: { type: Number, default: 5 },
     uploaded_images: { type: Number, default: 0 },
     total_likes: { type: Number, default: 0 },
     total_sales: { type: Number, default: 0 },
     wallet: { type: Number, default: 0 },
-    liked_images: [{ type: mongoose.Schema.Types.ObjectId, ref: "Image" }],
+    liked_images: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Image", default: [] },
+    ],
     role: {
       type: String,
-      enum: ["user", "photographer", "buyer", "admin"],
+      enum: ["superadmin", "admin", "moderator", "user"],
       default: "user",
     },
     followers: { type: Number, default: 0 },
@@ -79,7 +88,7 @@ userSchema.methods.getJwtToken = function () {
   });
 };
 
-// compaer password
+// compare password
 userSchema.methods.comparePassword = function (enteredPassword) {
   return bcrypt.compare(enteredPassword, this.password);
 };

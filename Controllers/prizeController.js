@@ -1,54 +1,105 @@
-const Prize = require('../Models/prizeModel');
-const catchAsyncErrors = require('../middlewares/catchAsyncErrors');
-const ErrorHandler = require('../utils/errorHandler');
+const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
+const Prize = require("../Models/prizeModel");
+const ErrorHandler = require("../utils/errorHandler");
+const User = require("../Models/userModel");
 
+//create prize info
+const BASE_URL = "http://localhost:3000/";
+exports.createPrizeInfo = catchAsyncErrors(async (req, res, next) => {
+  let { title, position, image_url } = req.body;
 
-exports.getPrizes = catchAsyncErrors(async(req, res, next)=>{
-    const prizes = Prize.find({});
-
-    if(!prizes){
-        return next(new ErrorHandler("prize not found", 404))
+  try {
+    // Process image if included
+    if (req.files && req.files.image_url) {
+      image_url = BASE_URL + req.files.image_url[0].path.replace(/\\/g, "/");
     }
+
+    // Ensure required fields are not empty
+    if (!title || !position || !image_url) {
+      return res.status(400).json({
+        success: false,
+        message: "Title, position, and image URL are required.",
+      });
+    }
+
+    // Create new prize info
+    const prizeInfo = new Prize({
+      title,
+      position,
+      image_url,
+    });
+
+    await prizeInfo.save();
 
     res.status(200).json({
-        success: ture,
-        statusCode:200,
-        prizes
-    })
-})
+      success: true,
+      message: "Prize info created successfully!",
+      prizeInfo,
+    });
+  } catch (error) {
+    console.error("Error in createPrizeInfo:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create prize info.",
+      error: error.message,
+    });
+  }
+});
 
-exports.updatePrize = catchAsyncErrors(async(req, res, next) =>{
-    const prize = await Prize.findById(req.params.id)
+// get prize info
+exports.getPrizeInfo = catchAsyncErrors(async (req, res, next) => {
+  const prizeInfo = await Prize.find({});
 
-    if(!prize){
-        return next(new ErrorHandler("prize not found", 404))
+  res.status(200).json({
+    success: true,
+    prizeInfo,
+  });
+});
+
+//update prize info
+exports.updatePrizeInfo = catchAsyncErrors(async (req, res, next) => {
+  const { id } = req.params;
+  const prizeInfo = await Prize.findById(id);
+
+  if (!prizeInfo) {
+    return next(new ErrorHandler("Prize Info not found!", 404));
+  }
+  let image_url = prizeInfo.image_url;
+  if (req.files && req.files.image_url) {
+    image_url = BASE_URL + req.files.image_url[0].path.replace(/\\/g, "/");
+  }
+  const updatedPrizeInfo = await Prize.findByIdAndUpdate(
+    id,
+    { ...req.body, image_url },
+    {
+      new: true,
+      runValidators: true,
     }
+  );
 
-    const updatedPrize = await Prize.findByIdAndUpdate(req.prams.id, req.body, {
-        new:true,
-        runValidator:true
-    })
+  if (!updatedPrizeInfo) {
+    return res
+      .status(404)
+      .json({ success: false, message: "Prize info not found" });
+  }
 
-    res.status(201).json({
-        success:ture,
-        statusCode:200,
-        message:"updated",
-        updatedPrize
-    })
-})
+  res.status(200).json({
+    success: true,
+    updatedPrizeInfo,
+  });
+});
 
-exports.deletePrize = catchAsyncErrors(async(req, res, next) =>{
-    const prize = await Prize.findById(req.params.id)
+// delete prize info
+exports.deletePrizeInfo = catchAsyncErrors(async (req, res, next) => {
+  const info = await Prize.findById(req.params.id);
 
-    if(!prize){
-        return next(new ErrorHandler("prize not found", 404))
-    }
+  if (!info) {
+    return next(new ErrorHandler("Prize Info not found", 404));
+  }
 
-    await prize.remove();
-    res.status(201).json({
-        success:ture,
-        statusCode:201,
-        message:"deleted successfully",
-        prize
-    })
-})
+  await info.deleteOne();
+  res.status(200).json({
+    success: true,
+    message: "successfully deleted",
+  });
+});

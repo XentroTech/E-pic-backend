@@ -1,9 +1,26 @@
-const express = require('express');
-const { getPrizes, updatePrize } = require('../Controllers/prizeController');
-
+const express = require("express");
+const { isAuthenticated } = require("../middlewares/Auth");
+const {
+  createPrizeInfo,
+  getPrizeInfo,
+  updatePrizeInfo,
+  deletePrizeInfo,
+} = require("../Controllers/prizeController");
+const upload = require("../middlewares/upload");
 const router = express.Router();
 
-
-router.get("/getAllPrizes", isAuthenticated, getPrizes)
-router.patch("/updatePrize", isAuthenticated, updatePrize)
-router.delete("/deletePrize", isAuthenticated, deletePrize)
+router.post(
+  "/prize",
+  upload.fields([{ name: "image_url", maxCount: 1 }]),
+  isAuthenticated,
+  createPrizeInfo
+);
+router.get("/prize", isAuthenticated, getPrizeInfo);
+router.patch(
+  "/prize/:id",
+  upload.fields([{ name: "image_url", maxCount: 1 }]),
+  isAuthenticated,
+  updatePrizeInfo
+);
+router.delete("/prize/:id", isAuthenticated, deletePrizeInfo);
+module.exports = router;

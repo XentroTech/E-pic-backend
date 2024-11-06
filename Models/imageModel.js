@@ -1,18 +1,26 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const imageSchema = new mongoose.Schema({
+const imageSchema = new mongoose.Schema(
+  {
     title: { type: String, required: true },
     description: { type: String },
     image_url: { type: String, required: true },
     category: { type: String, required: true },
-    price: { type: Number, required: true },
-    likes:  [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], 
+    price: { type: Number, default: 10 },
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     likesCount: { type: Number, default: 0 },
     sold_count: { type: Number, default: 0 },
-    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    camera: { type: String },
+    camera_model: { type: String },
+    camera_lens: { type: String, default: "" },
+    captured_date: { type: String },
+    focal_length: { type: String, default: "" },
+    owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     uploaded_at: { type: Date, default: Date.now },
-    is_featured: { type: Boolean, default: false },
-}, { timestamps: true });
+    isLive: { type: Boolean, default: false },
+  },
+  { timestamps: true }
+);
 
-const Image = mongoose.model('Image', imageSchema);
+const Image = mongoose.model("Image", imageSchema);
 module.exports = Image;
