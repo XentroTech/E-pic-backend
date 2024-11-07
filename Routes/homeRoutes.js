@@ -9,9 +9,10 @@ const {
 
 const router = express.Router();
 
-router.get("/topSeller", isAuthenticated, getTopSellers);
-router.get("/bestSellingImages", isAuthenticated, getBestSellingImages);
-router.get("/weeklyTopImages", isAuthenticated, getWeeklyTopSellingImages);
-router.get("/forYou", isAuthenticated, getForYouImages);
+router.get("/user/topSeller", isAuthenticated, getTopSellers);
+router.get("/image/bestSelling", isAuthenticated, getBestSellingImages);
+router.get("/image/weeklyTop", isAuthenticated, getWeeklyTopSellingImages);
+router.get("/image/forYou", isAuthenticated, getForYouImages);
+router.get("/image/new", isAuthenticated, getForYouImages);
 
 module.exports = router;

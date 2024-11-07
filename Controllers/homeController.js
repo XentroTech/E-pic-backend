@@ -97,3 +97,28 @@ exports.getForYouImages = catchAsyncErrors(async (req, res, next) => {
     images,
   });
 });
+
+// newly added images
+exports.getNewlyAddedImages = catchAsyncErrors(async (req, res, next) => {
+  // Get the start and end of the current week
+  const startWeek = new Date();
+  startWeek.setDate(startWeek.getDate() - startWeek.getDay());
+  startWeek.setHours(0, 0, 0, 0); // Set to the start of the day
+
+  const endWeek = new Date();
+  endWeek.setDate(endWeek.getDate() + (6 - endWeek.getDay()));
+  endWeek.setHours(23, 59, 59, 999); // Set to the end of the day
+
+  const images = await Image.find({
+    uploaded_at: { $gte: startWeek, $lte: endWeek },
+  });
+  if (!images) {
+    return next(new ErrorHandler("Images not Added this week", 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "successfully fetched newly added images",
+    images,
+  });
+});

@@ -4,12 +4,20 @@ const ErrorHandler = require("../utils/errorHandler");
 const User = require("../Models/userModel");
 
 //create coin info
+// controllers/coinController.js
+
 exports.createCoinInfo = catchAsyncErrors(async (req, res, next) => {
-  const { coin, price, image_url } = req.body;
+  const { coin, price, image_url, extraCoins, promoExpiration } = req.body;
+
+  const promoActive = promoExpiration ? true : false;
+
   const coinInfo = await Coin({
     coin,
     price,
     image_url,
+    extraCoins: extraCoins || 0,
+    promoExpiration,
+    promoActive,
   });
 
   await coinInfo.save();
@@ -69,22 +77,39 @@ exports.deleteCoinInfo = catchAsyncErrors(async (req, res, next) => {
 
 // purchase coin
 exports.purchaseCoin = catchAsyncErrors(async (req, res, next) => {
-  const { coin, price, paymentDetails } = req.body;
+  const { coinId, coin, price, paymentDetails } = req.body;
 
   const user = await User.findById(req.user._id);
   if (!user) {
     return next(new ErrorHandler("User not found", 404));
   }
-  const paymentSuccess = true; //processPayment(paymentDetails);
+
+  // Fetch coin info to check for active promo
+  const coinInfo = await Coin.findById(coinId);
+  if (!coinInfo) {
+    return next(new ErrorHandler("Coin info not found", 404));
+  }
+
+  // Check if promo is active and valid
+  let finalCoinAmount = coin;
+  if (coinInfo.promoActive && coinInfo.promoExpiration > new Date()) {
+    finalCoinAmount += coinInfo.extraCoins; // Add extra coins from promo
+  } else if (coinInfo.promoActive && coinInfo.promoExpiration <= new Date()) {
+    // Deactivate promo if expired
+    coinInfo.promoActive = false;
+    await coinInfo.save();
+  }
+
+  const paymentSuccess = true; // processPayment(paymentDetails);
   if (paymentSuccess) {
-    user.wallet += coin;
+    user.wallet += finalCoinAmount;
     await user.save();
+
     res.status(200).json({
       success: true,
-      statusCode: 200,
-      message: `Successfully purchased ${coin} coin`,
+      message: `Successfully purchased ${finalCoinAmount} coin(s).`,
     });
   } else {
-    return next(new ErrorHandler("payment not successful", 401));
+    return next(new ErrorHandler("Payment not successful", 401));
   }
 });
