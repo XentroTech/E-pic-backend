@@ -122,3 +122,42 @@ exports.getNewlyAddedImages = catchAsyncErrors(async (req, res, next) => {
     images,
   });
 });
+
+// featured images
+exports.makeFeaturedAndRemoveFeaturedImage = catchAsyncErrors(
+  async (req, res, next) => {
+    const imageId = req.params;
+    const image = await Image.findById(imageId);
+
+    if (!image) {
+      return next(new ErrorHandler("Image Not Found!", 404));
+    }
+    if (image.isFeatured) {
+      image.isFeatured = false;
+    } else {
+      image.isFeatured = true;
+    }
+    await image.save();
+
+    res.status(200).send({
+      success: true,
+      message: image.isFeatured
+        ? " image remove from features"
+        : "image successfully added to the featured images",
+    });
+  }
+);
+
+//get Featured images
+exports.getFeaturedImages = catchAsyncErrors(async (req, res, next) => {
+  const images = await Image.find({ isFeatured: true });
+
+  if (!images) {
+    return next(new ErrorHandler("Featured Images Not Found!", 404));
+  }
+  res.status(200).send({
+    success: true,
+    message: "Successfully fetched featured Images",
+    images,
+  });
+});

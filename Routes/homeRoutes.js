@@ -5,6 +5,8 @@ const {
   getBestSellingImages,
   getWeeklyTopSellingImages,
   getForYouImages,
+  getFeaturedImages,
+  makeFeaturedAndRemoveFeaturedImage,
 } = require("../Controllers/homeController");
 
 const router = express.Router();
@@ -14,5 +16,13 @@ router.get("/image/bestSelling", isAuthenticated, getBestSellingImages);
 router.get("/image/weeklyTop", isAuthenticated, getWeeklyTopSellingImages);
 router.get("/image/forYou", isAuthenticated, getForYouImages);
 router.get("/image/new", isAuthenticated, getForYouImages);
+router.get("/image/featured", isAuthenticated, getFeaturedImages);
+
+//admin
+router.post(
+  "/image/featured/:imageId",
+  isAuthenticated,
+  makeFeaturedAndRemoveFeaturedImage
+);
 
 module.exports = router;
