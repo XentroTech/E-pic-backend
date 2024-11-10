@@ -35,7 +35,8 @@ app.use("/uploads", express.static(uploadPath));
 
 // Middlewares
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin:
+    ("http://localhost:5173", "http://167.71.218.23/", "https//167.71.218.23"),
   methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
   credentials: true,
 };
