@@ -164,7 +164,7 @@ exports.getFeaturedImages = catchAsyncErrors(async (req, res, next) => {
 
 // get images as category
 exports.getImagesAsCategory = catchAsyncErrors(async (req, res, next) => {
-  const categoryName = req.body;
+  const categoryName = req.params;
 
   const images = await Image.find({ category: categoryName });
 

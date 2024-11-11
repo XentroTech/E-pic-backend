@@ -57,12 +57,11 @@ exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
         captured_date,
       });
 
+      user.uploaded_images.push(newImage._id);
       return await newImage.save();
     })
   );
 
-  // Updating the total number of uploaded images for the user
-  user.uploaded_images += uploadedImages.length;
   // Updating image limit after upload
   user.image_limit -= files.length;
   await user.save();

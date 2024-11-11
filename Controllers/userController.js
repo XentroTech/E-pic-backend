@@ -26,10 +26,10 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
 
   //set referral bonus
   if (referralCode) {
-    const referBonus = await User.findOne({ username: referralCode });
-    if (referBonus) {
-      referBonus.wallet += 10;
-      await referBonus.save();
+    const referredUser = await User.findOne({ username: referralCode });
+    if (referredUser) {
+      referredUser.wallet += 10;
+      await referredUser.save();
     } else {
       return next(
         new ErrorHandler(
@@ -52,6 +52,7 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
 
   if (newUser.referralCode != "") {
     newUser.wallet += 5;
+    referredUser.referredUsers.push(newUser._id);
   }
 
   await newUser.save();
@@ -306,7 +307,8 @@ exports.updateUser = catchAsyncErrors(async (req, res, next) => {
     user,
   });
 });
-const BASE_URL = "https://192.168.0.8:3000/";
+const BASE_URL = "https://e-pic.co/upload/";
+
 // update user profile
 exports.updateUserProfile = catchAsyncErrors(async (req, res) => {
   const userId = req.user.id;
