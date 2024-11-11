@@ -161,3 +161,53 @@ exports.getFeaturedImages = catchAsyncErrors(async (req, res, next) => {
     images,
   });
 });
+
+// get images as category
+exports.getImagesAsCategory = catchAsyncErrors(async (req, res, next) => {
+  const categoryName = req.body;
+
+  const images = await Image.find({ category: categoryName });
+
+  if (!images) {
+    return next(new ErrorHandler("Images not found!"));
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Successfully fetched images",
+    images,
+  });
+});
+
+// get images of followed user
+exports.getImagesOfFollowedUser = catchAsyncErrors(async (req, res, next) => {
+  // Find the user and get their following user's id
+  const user = await User.findById(req.user._id).populate("following", "_id");
+
+  let images = [];
+
+  if (user.following && user.following.length > 0) {
+    // User has following users
+    const users = [...new user.following.map((user) => user._id)];
+
+    // Fetch images from those user
+    images = await Image.find({
+      owner: { $in: users },
+    })
+      .populate("owner", "name profile_pic")
+      .limit(20); // Limit to a reasonable number
+  } else {
+    // User has not following user, fetch random images
+    images = await Image.aggregate([{ $sample: { size: 20 } }]);
+  }
+
+  res.status(200).json({
+    success: true,
+    statusCode: 200,
+    message:
+      user.liked_images.length > 0
+        ? "Successfully fetched 'For You' images"
+        : "Showing random images",
+    images,
+  });
+});

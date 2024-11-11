@@ -306,7 +306,7 @@ exports.updateUser = catchAsyncErrors(async (req, res, next) => {
     user,
   });
 });
-const BASE_URL = "http://192.168.0.8:3000/";
+const BASE_URL = "https://192.168.0.8:3000/";
 // update user profile
 exports.updateUserProfile = catchAsyncErrors(async (req, res) => {
   const userId = req.user.id;
@@ -459,35 +459,38 @@ exports.purchaseCoin = catchAsyncErrors(async (req, res, next) => {
   }
 });
 
-//follow user
+// follow/un-follow user
 exports.followUser = catchAsyncErrors(async (req, res, next) => {
-  const followingUserId = req.params._id;
-  const followersUserId = req.user_id;
+  const userToFollowId = req.params._id; // User to be followed/un-followed
+  const currentUserId = req.user_id; // Current logged-in user
 
-  const followingUser = await User.findById(followingUserId);
-  const followerUser = await User.findById(followersUserId);
+  const userToFollow = await User.findById(userToFollowId);
+  const currentUser = await User.findById(currentUserId);
 
-  if (!followingUser) {
-    return next(new ErrorHandler("user not found", 404));
+  // Check if both users exist
+  if (!userToFollow || !currentUser) {
+    return next(new ErrorHandler("User not found", 404));
   }
 
-  const alreadyFollowed = followingUser.followers.includes(followingUserId);
+  const alreadyFollowed = userToFollow.followers.includes(currentUserId);
 
   if (alreadyFollowed) {
-    followingUser.followers.pull(followersUserId);
-    followerUser.following.pull(followingUserId);
+    // Un-follow
+    userToFollow.followers.pull(currentUserId);
+    currentUser.following.pull(userToFollowId);
   } else {
-    followingUser.followers.push(followersUserId);
-    followerUser.following.push(followingUserId);
+    // Follow
+    userToFollow.followers.push(currentUserId);
+    currentUser.following.push(userToFollowId);
   }
 
-  await followingUser.save();
-  await followerUser.save();
+  await userToFollow.save();
+  await currentUser.save();
 
   res.status(200).json({
     success: true,
     statusCode: 200,
-    message: alreadyFollowed ? "un follow the user" : "followed the user",
+    message: alreadyFollowed ? "Un-followed the user" : "Followed the user",
   });
 });
 

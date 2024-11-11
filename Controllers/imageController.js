@@ -49,7 +49,7 @@ exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
         description: description,
         category: category,
         // Store the file as a Buffer in MongoDB
-        image_url: `http://localhost:3000/uploads/${file.filename}`,
+        image_url: `https://192.168.0.8:3000/uploads/${file.filename}`,
         owner: req.user._id,
         camera,
         camera_model,
