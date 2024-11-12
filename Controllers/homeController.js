@@ -211,3 +211,93 @@ exports.getImagesOfFollowedUser = catchAsyncErrors(async (req, res, next) => {
     images,
   });
 });
+
+// search api
+exports.search = catchAsyncErrors(async (req, res) => {
+  const { query = "", page = 1, limit = 10, type = "image" } = req.query;
+  const requestingUserRole = req.user ? req.user.role : null;
+
+  let searchCriteria = [];
+
+  // Check if the search type is for 'user' or 'image'
+  if (type === "user") {
+    // If the user is a 'user', exclude super admins, admins, and moderators from the results
+    if (requestingUserRole === "user") {
+      searchCriteria.push({
+        role: { $nin: ["superadmin", "admin", "moderator"] },
+      });
+    }
+
+    // If search query exists, search by username, email, mobile No
+    if (query) {
+      searchCriteria.push({
+        $or: [
+          { username: { $regex: query, $options: "i" } }, // Case-insensitive search
+          { email: { $regex: query, $options: "i" } },
+          { mobileNo: { $regex: query } },
+        ],
+      });
+    }
+
+    // Combine search criteria using $and if there are any criteria
+    const finalCriteria =
+      searchCriteria.length > 0 ? { $and: searchCriteria } : {};
+
+    // Get the total count of users matching the search criteria
+    const totalUsers = await User.countDocuments(finalCriteria);
+
+    // Find users with pagination
+    const users = await User.find(finalCriteria)
+      .skip((page - 1) * limit) // Skip previous pages
+      .limit(parseInt(limit)); // Limit the results to the number specified in limit
+
+    // If no users found
+    if (users.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Send paginated response
+    res.status(200).json({
+      totalUsers,
+      currentPage: page,
+      totalPages: Math.ceil(totalUsers / limit),
+      users,
+    });
+  } else if (type === "image") {
+    // For images, you can define search criteria based on image title or other fields
+    const imageSearchCriteria = query
+      ? {
+          title: { $regex: query, $options: "i" },
+        }
+      : {};
+
+    // Get the total count of images matching the search criteria
+    const totalImages = await Image.countDocuments(imageSearchCriteria);
+
+    // Find images with pagination
+    const images = await Image.find(imageSearchCriteria)
+      .skip((page - 1) * limit) // Skip previous pages
+      .limit(parseInt(limit)); // Limit the results to the number specified in limit
+
+    // If no images found
+    if (images.length === 0) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    // Send paginated response
+    res.status(200).json({
+      totalImages,
+      currentPage: page,
+      totalPages: Math.ceil(totalImages / limit),
+      images,
+    });
+  } else {
+    // If the 'type' parameter is invalid
+    return res
+      .status(400)
+      .json({ message: "Invalid search type. Use 'user' or 'image'." });
+  }
+});
+
+// ad banner
+exports.createAdBanner = catchAsyncErrors(async (req, res, next) => {});

@@ -4,7 +4,8 @@ const ErrorHandler = require("../utils/errorHandler");
 const Category = require("../Models/categoryModel");
 
 //create Category
-const BASE_URL = "http://localhost:3000/";
+const BASE_URL = "https://e-pic.co/upload/";
+
 exports.createCategory = catchAsyncErrors(async (req, res, next) => {
   let { name, image_url } = req.body;
 

@@ -47,7 +47,7 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
     password: password,
     mobileNo: mobileNo,
     referralCode: referralCode,
-    country: "",
+    country: country,
   });
 
   if (newUser.referralCode != "") {

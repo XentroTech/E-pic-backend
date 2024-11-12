@@ -42,7 +42,9 @@ const userSchema = new Schema(
       type: String,
     },
     referralCode: { type: String, default: "" },
-    referredUsers: [{ type: mongoose.Schema.TypesObjectId, ref: "User" }],
+    referredUsers: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] },
+    ],
     profile_pic: { type: String, default: "" },
     cover_pic: { type: String, default: "" },
     image_limit: { type: Number, default: 5 },
