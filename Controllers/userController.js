@@ -307,13 +307,12 @@ exports.updateUser = catchAsyncErrors(async (req, res, next) => {
     user,
   });
 });
-const BASE_URL = "https://e-pic.co/upload/";
+const BASE_URL = "https://e-pic.co/uploads/";
 
 // update user profile
 exports.updateUserProfile = catchAsyncErrors(async (req, res) => {
   const userId = req.user.id;
-  console.log(req.body);
-  console.log(req.files);
+
   let user = await User.findById(userId);
 
   if (!user) {

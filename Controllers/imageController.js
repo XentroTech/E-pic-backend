@@ -388,7 +388,10 @@ exports.purchaseImage = catchAsyncErrors(async (req, res, next) => {
 // get the user's gallery
 exports.getUserMarketPlaceImages = catchAsyncErrors(async (req, res, next) => {
   const userId = req.user._id;
-  const images = await Image.find({ owner: userId });
+  const images = await Image.find({ owner: userId }).populate(
+    "owner",
+    "name image_url"
+  );
 
   if (!images) {
     next(new ErrorHandler("Image not found", 404));

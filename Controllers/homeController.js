@@ -111,7 +111,7 @@ exports.getNewlyAddedImages = catchAsyncErrors(async (req, res, next) => {
 
   const images = await Image.find({
     uploaded_at: { $gte: startWeek, $lte: endWeek },
-  });
+  }).populate("owner", "name image_url");
   if (!images) {
     return next(new ErrorHandler("Images not Added this week", 404));
   }
@@ -150,7 +150,10 @@ exports.makeFeaturedAndRemoveFeaturedImage = catchAsyncErrors(
 
 //get Featured images
 exports.getFeaturedImages = catchAsyncErrors(async (req, res, next) => {
-  const images = await Image.find({ isFeatured: true });
+  const images = await Image.find({ isFeatured: true }).populate(
+    "owner",
+    "name image_url"
+  );
 
   if (!images) {
     return next(new ErrorHandler("Featured Images Not Found!", 404));
@@ -166,7 +169,10 @@ exports.getFeaturedImages = catchAsyncErrors(async (req, res, next) => {
 exports.getImagesAsCategory = catchAsyncErrors(async (req, res, next) => {
   const categoryName = req.params;
 
-  const images = await Image.find({ category: categoryName });
+  const images = await Image.find({ category: categoryName }).populate(
+    "owner",
+    "name image_url"
+  );
 
   if (!images) {
     return next(new ErrorHandler("Images not found!"));
@@ -182,7 +188,10 @@ exports.getImagesAsCategory = catchAsyncErrors(async (req, res, next) => {
 // get images of followed user
 exports.getImagesOfFollowedUser = catchAsyncErrors(async (req, res, next) => {
   // Find the user and get their following user's id
-  const user = await User.findById(req.user._id).populate("following", "_id");
+  const user = await User.findById(req.user._id).populate(
+    "following",
+    "_id name image_url"
+  );
 
   let images = [];
 
@@ -276,6 +285,7 @@ exports.search = catchAsyncErrors(async (req, res) => {
 
     // Find images with pagination
     const images = await Image.find(imageSearchCriteria)
+      .populate("owner", "_id name image_url")
       .skip((page - 1) * limit) // Skip previous pages
       .limit(parseInt(limit)); // Limit the results to the number specified in limit
 
