@@ -111,7 +111,7 @@ exports.getNewlyAddedImages = catchAsyncErrors(async (req, res, next) => {
 
   const images = await Image.find({
     uploaded_at: { $gte: startWeek, $lte: endWeek },
-  }).populate("owner", "name image_url");
+  }).populate("owner", "name profile_pic");
   if (!images) {
     return next(new ErrorHandler("Images not Added this week", 404));
   }
@@ -152,7 +152,7 @@ exports.makeFeaturedAndRemoveFeaturedImage = catchAsyncErrors(
 exports.getFeaturedImages = catchAsyncErrors(async (req, res, next) => {
   const images = await Image.find({ isFeatured: true }).populate(
     "owner",
-    "name image_url"
+    "name profile_pic"
   );
 
   if (!images) {
@@ -171,7 +171,7 @@ exports.getImagesAsCategory = catchAsyncErrors(async (req, res, next) => {
 
   const images = await Image.find({ category: categoryName }).populate(
     "owner",
-    "name image_url"
+    "name profile_pic"
   );
 
   if (!images) {
@@ -190,7 +190,7 @@ exports.getImagesOfFollowedUser = catchAsyncErrors(async (req, res, next) => {
   // Find the user and get their following user's id
   const user = await User.findById(req.user._id).populate(
     "following",
-    "_id name image_url"
+    "_id name profile_pic"
   );
 
   let images = [];
@@ -238,7 +238,7 @@ exports.search = catchAsyncErrors(async (req, res) => {
     }
 
     // If search query exists, search by username, email, mobile No
-    if (query) {
+    if (query.trim()) {
       searchCriteria.push({
         $or: [
           { username: { $regex: query, $options: "i" } }, // Case-insensitive search
@@ -246,7 +246,10 @@ exports.search = catchAsyncErrors(async (req, res) => {
           { mobileNo: { $regex: query } },
         ],
       });
-    }
+    // }else {
+    //   // If query is empty, ensure no users are returned
+    //   searchCriteria.push({ _id: { $exists: false } });
+    // }
 
     // Combine search criteria using $and if there are any criteria
     const finalCriteria =
@@ -267,6 +270,7 @@ exports.search = catchAsyncErrors(async (req, res) => {
 
     // Send paginated response
     res.status(200).json({
+      success: true,
       totalUsers,
       currentPage: page,
       totalPages: Math.ceil(totalUsers / limit),
@@ -285,7 +289,7 @@ exports.search = catchAsyncErrors(async (req, res) => {
 
     // Find images with pagination
     const images = await Image.find(imageSearchCriteria)
-      .populate("owner", "_id name image_url")
+      .populate("owner", "_id name profile_pic")
       .skip((page - 1) * limit) // Skip previous pages
       .limit(parseInt(limit)); // Limit the results to the number specified in limit
 
@@ -296,6 +300,7 @@ exports.search = catchAsyncErrors(async (req, res) => {
 
     // Send paginated response
     res.status(200).json({
+      success: true,
       totalImages,
       currentPage: page,
       totalPages: Math.ceil(totalImages / limit),

@@ -18,6 +18,7 @@ const prizeRoutes = require("./Routes/prizeRoutes");
 const categoryRoutes = require("./Routes/categoryRoutes");
 const homeRoutes = require("./Routes/homeRoutes");
 const sponsorRoutes = require("./Routes/sponsorRoutes");
+const deleteAccountRoutes = require("./Routes/deleteAccountRoutes");
 
 // Initialize dotenv before using any environment variables
 dotenv.config();
@@ -66,6 +67,7 @@ app.use("/api/v1/", prizeRoutes);
 app.use("/api/v1/", categoryRoutes);
 app.use("/api/v1/", homeRoutes);
 app.use("/api/v1/", sponsorRoutes);
+app.use("/api/v1/", deleteAccountRoutes);
 
 // Error middleware
 app.use(errorMiddleware);

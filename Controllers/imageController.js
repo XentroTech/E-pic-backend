@@ -390,7 +390,7 @@ exports.getUserMarketPlaceImages = catchAsyncErrors(async (req, res, next) => {
   const userId = req.user._id;
   const images = await Image.find({ owner: userId }).populate(
     "owner",
-    "name image_url"
+    "name profile_pic"
   );
 
   if (!images) {

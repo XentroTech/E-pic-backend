@@ -53,7 +53,7 @@ const userSchema = new Schema(
     ],
     total_likes: { type: Number, default: 0 },
     total_sales: { type: Number, default: 0 },
-    wallet: { type: Number, default: 0 },
+    wallet: { type: Number, default: 0.0 },
     liked_images: [
       { type: mongoose.Schema.Types.ObjectId, ref: "Image", default: [] },
     ],
