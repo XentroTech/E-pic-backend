@@ -4,7 +4,7 @@ const ErrorHandler = require("../utils/errorHandler");
 const User = require("../Models/userModel");
 
 //create prize info
-const BASE_URL = "https://e-pic.co/upload/";
+const BASE_URL = "https://e-pic.co/";
 
 exports.createPrizeInfo = catchAsyncErrors(async (req, res, next) => {
   let { title, position, image_url } = req.body;

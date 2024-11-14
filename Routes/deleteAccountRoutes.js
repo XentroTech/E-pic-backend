@@ -4,6 +4,7 @@ const {
   createDeleteAccountRequest,
   getUserDeleteRequest,
   approveDeleteAccountRequest,
+  declineRequest,
 } = require("../Controllers/deleteAccountController");
 
 const router = express.Router();

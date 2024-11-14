@@ -8,7 +8,7 @@ const processPayment = require("../utils/processPayment.js");
 const crypto = require("crypto");
 const { validationResult } = require("express-validator");
 const Image = require("../Models/imageModel.js");
-
+const BASE_URL = "https://e-pic.co";
 //register
 exports.register = catchAsyncErrors(async (req, res, next) => {
   const { name, username, email, password, mobileNo, referralCode, country } =
@@ -307,7 +307,6 @@ exports.updateUser = catchAsyncErrors(async (req, res, next) => {
     user,
   });
 });
-const BASE_URL = "https://e-pic.co/uploads/";
 
 // update user profile
 exports.updateUserProfile = catchAsyncErrors(async (req, res) => {

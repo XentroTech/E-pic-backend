@@ -222,6 +222,7 @@ exports.getImagesOfFollowedUser = catchAsyncErrors(async (req, res, next) => {
 });
 
 // search api
+
 exports.search = catchAsyncErrors(async (req, res) => {
   const { query = "", page = 1, limit = 10, type = "image" } = req.query;
   const requestingUserRole = req.user ? req.user.role : null;
@@ -238,7 +239,7 @@ exports.search = catchAsyncErrors(async (req, res) => {
     }
 
     // If search query exists, search by username, email, mobile No
-    if (query.trim()) {
+    if (query) {
       searchCriteria.push({
         $or: [
           { username: { $regex: query, $options: "i" } }, // Case-insensitive search
@@ -246,10 +247,7 @@ exports.search = catchAsyncErrors(async (req, res) => {
           { mobileNo: { $regex: query } },
         ],
       });
-    // }else {
-    //   // If query is empty, ensure no users are returned
-    //   searchCriteria.push({ _id: { $exists: false } });
-    // }
+    }
 
     // Combine search criteria using $and if there are any criteria
     const finalCriteria =
