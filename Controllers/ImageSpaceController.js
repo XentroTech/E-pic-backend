@@ -70,8 +70,9 @@ exports.deleteImageSpacesInfo = catchAsyncErrors(async (req, res, next) => {
 
 // purchase spaces
 exports.purchaseSpace = catchAsyncErrors(async (req, res, next) => {
-  const { space, price, paymentDetails } = req.body;
+  const { paymentDetails } = req.body;
 
+  const space = req.params;
   const user = await User.findById(req.user._id);
   if (!user) {
     return next(new ErrorHandler("User not found", 404));

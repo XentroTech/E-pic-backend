@@ -49,7 +49,7 @@ exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
         description: description,
         category: category,
         // Store the file as a Buffer in MongoDB
-        image_url: `http://localhost:3000/uploads/${file.filename}`,
+        image_url: `https://192.168.0.8:3000/uploads/${file.filename}`,
         owner: req.user._id,
         camera,
         camera_model,
@@ -57,12 +57,11 @@ exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
         captured_date,
       });
 
+      user.uploaded_images.push(newImage._id);
       return await newImage.save();
     })
   );
 
-  // Updating the total number of uploaded images for the user
-  user.uploaded_images += uploadedImages.length;
   // Updating image limit after upload
   user.image_limit -= files.length;
   await user.save();
@@ -389,7 +388,10 @@ exports.purchaseImage = catchAsyncErrors(async (req, res, next) => {
 // get the user's gallery
 exports.getUserMarketPlaceImages = catchAsyncErrors(async (req, res, next) => {
   const userId = req.user._id;
-  const images = await Image.find({ owner: userId });
+  const images = await Image.find({ owner: userId }).populate(
+    "owner",
+    "name profile_pic"
+  );
 
   if (!images) {
     next(new ErrorHandler("Image not found", 404));

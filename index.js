@@ -17,6 +17,8 @@ const coinRoutes = require("./Routes/coinRoutes");
 const prizeRoutes = require("./Routes/prizeRoutes");
 const categoryRoutes = require("./Routes/categoryRoutes");
 const homeRoutes = require("./Routes/homeRoutes");
+const sponsorRoutes = require("./Routes/sponsorRoutes");
+const deleteAccountRoutes = require("./Routes/deleteAccountRoutes");
 
 // Initialize dotenv before using any environment variables
 dotenv.config();
@@ -35,11 +37,15 @@ app.use("/uploads", express.static(uploadPath));
 
 // Middlewares
 const corsOptions = {
-  origin:
-    ("http://localhost:5173", "http://167.71.218.23/", "https//167.71.218.23"),
+  origin: [
+    "http://localhost:5173",
+    "http://167.71.218.23",
+    "https://167.71.218.23",
+  ],
   methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
   credentials: true,
 };
+
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -60,6 +66,8 @@ app.use("/api/v1/", coinRoutes);
 app.use("/api/v1/", prizeRoutes);
 app.use("/api/v1/", categoryRoutes);
 app.use("/api/v1/", homeRoutes);
+app.use("/api/v1/", sponsorRoutes);
+app.use("/api/v1/", deleteAccountRoutes);
 
 // Error middleware
 app.use(errorMiddleware);

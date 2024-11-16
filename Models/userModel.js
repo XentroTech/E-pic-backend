@@ -29,10 +29,10 @@ const userSchema = new Schema(
       minLength: [8, "Password should be 8 characters"],
       required: [true, "Please enter your password"],
     },
-    // country: {
-    //   type: String,
-    //   required: true,
-    // },
+    country: {
+      type: String,
+      // required: true,
+    },
     mobileNo: {
       type: String,
       unique: true,
@@ -42,14 +42,18 @@ const userSchema = new Schema(
       type: String,
     },
     referralCode: { type: String, default: "" },
-    // referredUsers:[{type: mongoose.Schema.TypesObjectId, ref:'User'}],
+    referredUsers: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] },
+    ],
     profile_pic: { type: String, default: "" },
     cover_pic: { type: String, default: "" },
     image_limit: { type: Number, default: 5 },
-    uploaded_images: { type: Number, default: 0 },
+    uploaded_images: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Image", default: [] },
+    ],
     total_likes: { type: Number, default: 0 },
     total_sales: { type: Number, default: 0 },
-    wallet: { type: Number, default: 0 },
+    wallet: { type: Number, default: 0.0 },
     liked_images: [
       { type: mongoose.Schema.Types.ObjectId, ref: "Image", default: [] },
     ],
@@ -58,8 +62,12 @@ const userSchema = new Schema(
       enum: ["superadmin", "admin", "moderator", "user"],
       default: "user",
     },
-    followers: { type: Number, default: 0 },
-    following: { type: Number, default: 0 },
+    followers: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] },
+    ],
+    following: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] },
+    ],
     fcmToken: { type: String },
     isActive: { type: Boolean, default: true },
     resetPasswordOtp: { type: String },
