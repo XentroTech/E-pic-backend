@@ -461,7 +461,7 @@ exports.purchaseCoin = catchAsyncErrors(async (req, res, next) => {
 
 // follow/un-follow user
 exports.followUser = catchAsyncErrors(async (req, res, next) => {
-  const userToFollowId = req.params._id; // User to be followed/un-followed
+  const userToFollowId = req.params.id; // User to be followed/un-followed
   const currentUserId = req.user_id; // Current logged-in user
 
   const userToFollow = await User.findById(userToFollowId);

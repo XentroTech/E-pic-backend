@@ -327,7 +327,7 @@ exports.deleteImage = catchAsyncErrors(async (req, res, next) => {
 //like image
 exports.likeImage = catchAsyncErrors(async (req, res, next) => {
   const userId = req.user._id;
-  const image = await Image.findById(req.params);
+  const image = await Image.findById(req.params.id);
   const user = await User.findById(userId);
   if (!image) {
     return next(new ErrorHandler("image not found", 404));

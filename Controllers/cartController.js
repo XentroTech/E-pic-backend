@@ -1,10 +1,9 @@
 // Cart Controller
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const ErrorHandler = require("../utils/errorHandler");
-const Cart = require("../models/Cart");
-const Image = require("../models/Image");
-const User = require("../models/User");
-
+const Cart = require("../Models/cartModel");
+const User = require("../Models/userModel");
+const Image = require("../Models/imageModel");
 // Add image to cart
 exports.addToCart = catchAsyncErrors(async (req, res, next) => {
   const { userId, imageId } = req.body;

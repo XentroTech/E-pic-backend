@@ -10,18 +10,18 @@ const upload = require("../middlewares/upload");
 const router = express.Router();
 
 router.post(
-  "/sponsor",
+  "/sponsor/create",
   isAuthenticated,
   upload.fields([{ name: "image_url", maxCount: 1 }]),
   createSponsorship
 );
-router.get("/sponsor", isAuthenticated, getActiveSponsorships);
+router.get("/sponsor/get", isAuthenticated, getActiveSponsorships);
 router.patch(
-  "/sponsor",
+  "/sponsor/update/:id",
   isAuthenticated,
   upload.fields([{ name: "image_url", maxCount: 1 }]),
   updateSponsor
 );
-router.delete("/sponsor", isAuthenticated, deleteSponsor);
+router.delete("/sponsor/delete/:id", isAuthenticated, deleteSponsor);
 
 module.exports = router;
