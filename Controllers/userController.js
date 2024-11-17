@@ -20,7 +20,7 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler(errors.array()[0].msg, 400));
   }
 
-  if (!name || !username || !email || !password || !mobileNo || country) {
+  if (!name || !username || !email || !password || !mobileNo || !country) {
     return next(new ErrorHandler("Please provide all information", 401));
   }
 
@@ -461,12 +461,10 @@ exports.purchaseCoin = catchAsyncErrors(async (req, res, next) => {
 
 // follow/un-follow user
 exports.followUser = catchAsyncErrors(async (req, res, next) => {
-  const userToFollowId = req.params._id; // User to be followed/un-followed
-  const currentUserId = req.user_id; // Current logged-in user
-
+  const userToFollowId = req.params.id; // User to be followed/un-followed
+  const currentUserId = req.user._id; // Current logged-in user
   const userToFollow = await User.findById(userToFollowId);
   const currentUser = await User.findById(currentUserId);
-
   // Check if both users exist
   if (!userToFollow || !currentUser) {
     return next(new ErrorHandler("User not found", 404));

@@ -1,15 +1,14 @@
 // Cart Controller
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const ErrorHandler = require("../utils/errorHandler");
-const Cart = require("../models/Cart");
-const Image = require("../models/Image");
-const User = require("../models/User");
-
+const Cart = require("../Models/cartModel");
+const User = require("../Models/userModel");
+const Image = require("../Models/imageModel");
+const { Identity } = require("twilio/lib/twiml/VoiceResponse");
 // Add image to cart
 exports.addToCart = catchAsyncErrors(async (req, res, next) => {
-  const { userId, imageId } = req.body;
-
-  const user = await User.findById(userId);
+  const { imageId } = req.body;
+  const user = await User.findById(req.user._id);
   if (!user) {
     return next(new ErrorHandler("User not found", 404));
   }
@@ -20,14 +19,14 @@ exports.addToCart = catchAsyncErrors(async (req, res, next) => {
   }
 
   // Check if image is already in the cart
-  let cartItem = await Cart.findOne({ user: userId, image: imageId });
+  let cartItem = await Cart.findOne({ user: req.user._id, image: imageId });
   if (cartItem) {
     return next(new ErrorHandler("Image is already in the cart", 400));
   }
 
   // Add image to cart
   cartItem = new Cart({
-    user: userId,
+    user: req.user._id,
     image: imageId,
   });
 
@@ -43,15 +42,13 @@ exports.addToCart = catchAsyncErrors(async (req, res, next) => {
 
 // Get user's cart
 exports.getCart = catchAsyncErrors(async (req, res, next) => {
-  const { userId } = req.params;
-
-  const user = await User.findById(userId);
+  const user = await User.findById(req.user._id);
   if (!user) {
     return next(new ErrorHandler("User not found", 404));
   }
 
   // Fetch all items in the user's cart
-  const cartItems = await Cart.find({ user: userId }).populate("image");
+  const cartItems = await Cart.find({ user: req.user._id }).populate("image");
   if (!cartItems || cartItems.length === 0) {
     return res.status(200).json({
       success: true,
@@ -70,37 +67,33 @@ exports.getCart = catchAsyncErrors(async (req, res, next) => {
 
 // Remove image from cart
 exports.removeFromCart = catchAsyncErrors(async (req, res, next) => {
-  const { userId, imageId } = req.body;
-
-  const user = await User.findById(userId);
+  const user = await User.findById(req.user._id);
   if (!user) {
     return next(new ErrorHandler("User not found", 404));
   }
 
-  const cartItem = await Cart.findOne({ user: userId, image: imageId });
+  const cartItem = await Cart.findOne({ _id: req.params.id });
   if (!cartItem) {
-    return next(new ErrorHandler("Image not found in cart", 404));
+    return next(new ErrorHandler("Cart Item not found in cart", 404));
   }
 
-  await cartItem.remove();
+  await cartItem.deleteOne();
 
   res.status(200).json({
     success: true,
     statusCode: 200,
-    message: "Image removed from cart successfully",
+    message: "Item removed from cart successfully",
   });
 });
 
 // Clear cart
 exports.clearCart = catchAsyncErrors(async (req, res, next) => {
-  const { userId } = req.body;
-
-  const user = await User.findById(userId);
+  const user = await User.findById(req.user._id);
   if (!user) {
     return next(new ErrorHandler("User not found", 404));
   }
 
-  await Cart.deleteMany({ user: userId });
+  await Cart.deleteMany({ user: req.user._id });
 
   res.status(200).json({
     success: true,

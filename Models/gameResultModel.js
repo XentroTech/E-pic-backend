@@ -1,15 +1,12 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-
-
-const gameResult = new Schema({
-    userId:{},
-    gameId:{},
-    win_count:{}
+const gameResultSchema = new Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  imageId: { type: mongoose.Schema.Types.ObjectId, ref: "Image" },
+  duration: { type: Number },
+  createdAt: { type: Date, default: Date.now() },
 });
 
-
-module.exports = mongoose.Model('GameResult', gameResult);
-
-
+const GameResult = mongoose.model("GameResult", gameResultSchema);
+module.exports = GameResult;

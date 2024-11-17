@@ -6,6 +6,7 @@ const BASE_URL = "https://e-pic.co/";
 // create sponsor
 exports.createSponsorship = catchAsyncErrors(async (req, res) => {
   const { brandName, adLocation, startDate, endDate } = req.body;
+
   let image_url = "";
   if (req.files && req.files.image_url) {
     image_url = BASE_URL + req.files.image_url[0].path.replace(/\\/g, "/");

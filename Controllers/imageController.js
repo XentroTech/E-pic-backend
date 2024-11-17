@@ -327,7 +327,7 @@ exports.deleteImage = catchAsyncErrors(async (req, res, next) => {
 //like image
 exports.likeImage = catchAsyncErrors(async (req, res, next) => {
   const userId = req.user._id;
-  const image = await Image.findById(req.params);
+  const image = await Image.findById(req.params.id);
   const user = await User.findById(userId);
   if (!image) {
     return next(new ErrorHandler("image not found", 404));
@@ -373,6 +373,8 @@ exports.purchaseImage = catchAsyncErrors(async (req, res, next) => {
   image.sold_count += 1;
   //updating image owner's total_sales
   image.owner.total_sells += price;
+  //updating image buyer's info
+  image.bought_by.push(user._id);
 
   await image.save();
   await user.save();

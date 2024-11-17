@@ -17,6 +17,7 @@ const imageSchema = new mongoose.Schema(
     focal_length: { type: String, default: "" },
     owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     uploaded_at: { type: Date, default: Date.now },
+    bought_by: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     isLive: { type: Boolean, default: false },
     isFeatured: { type: Boolean, default: false },
   },

@@ -10,8 +10,8 @@ const {
 const router = express.Router();
 
 router.post("/cart/addToCart", isAuthenticated, addToCart);
-router.get("/cart", isAuthenticated, getCart);
-router.delete("/cart/:id", isAuthenticated, removeFromCart);
-router.delete("/cart/", isAuthenticated, clearCart);
+router.get("/cart/get", isAuthenticated, getCart);
+router.delete("/cart/delete/:id", isAuthenticated, removeFromCart);
+router.delete("/cart/clear", isAuthenticated, clearCart);
 
 module.exports = router;

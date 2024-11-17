@@ -8,6 +8,7 @@ const BASE_URL = "https://e-pic.co/";
 
 exports.createPrizeInfo = catchAsyncErrors(async (req, res, next) => {
   let { title, position, image_url } = req.body;
+  console.log(req.body);
 
   try {
     // Process image if included
