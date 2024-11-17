@@ -9,13 +9,21 @@ const {
 
 const router = express.Router();
 
-router.post("/delete/account", isAuthenticated, createDeleteAccountRequest);
-router.get("/delete/account", isAuthenticated, getUserDeleteRequest);
+router.post(
+  "/delete/account/request",
+  isAuthenticated,
+  createDeleteAccountRequest
+);
+router.get(
+  "/delete/account/all-request",
+  isAuthenticated,
+  getUserDeleteRequest
+);
 router.delete(
-  "/delete/account/approve",
+  "/delete/account/approve/:id",
   isAuthenticated,
   approveDeleteAccountRequest
 );
-router.delete("/delete/account/decline", isAuthenticated, declineRequest);
+router.post("/delete/account/decline/:id", isAuthenticated, declineRequest);
 
 module.exports = router;

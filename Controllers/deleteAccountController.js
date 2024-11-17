@@ -61,7 +61,7 @@ exports.approveDeleteAccountRequest = catchAsyncErrors(
 
 //decline request
 exports.declineRequest = catchAsyncErrors(async (req, res, next) => {
-  const id = req.params;
+  const id = req.params.id;
 
   const request = await DeleteAccount.findById(id);
 

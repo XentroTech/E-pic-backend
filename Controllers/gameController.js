@@ -1,19 +1,33 @@
+const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
+const Game = require("../Models/gameModel");
+const ErrorHandler = require("../utils/errorHandler");
 
-const catchAsyncErrors = require('../middlewares/catchAsyncErrors');
-const Game = require('../models/Game');
+exports.createGameTime = catchAsyncErrors(async (req, res, next) => {
+  const gameTime = req.body;
 
-exports.startGame = catchAsyncErrors(async (req, res) => {
-    const { type, startTime, endTime, duration } = req.body;
+  const newGameTime = await Game.create({
+    gameTime: gameTime,
+  });
 
-    const game = new Game({
-        type,
-        startTime,
-        endTime,
-        duration,
-        status: 'active'
-    });
+  await newGameTime.save();
 
-    await game.save();
-    res.status(201).json({ message: `${type} game started`, game });
+  res.status(200).json({
+    success: true,
+    message: "New Game Time Added",
+    newGameTime,
+  });
 });
 
+exports.getGameTime = catchAsyncErrors(async (req, res, next) => {
+  const gameTime = await Game.find({});
+
+  if (!gameTime) {
+    return next(new ErrorHandler("Game Time not found!", 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Successfully fetched game time.",
+    gameTime,
+  });
+});
