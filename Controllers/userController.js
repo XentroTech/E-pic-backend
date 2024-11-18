@@ -9,13 +9,13 @@ const crypto = require("crypto");
 const { validationResult } = require("express-validator");
 const Image = require("../Models/imageModel.js");
 const BASE_URL = "https://e-pic.co";
+
 //register
 exports.register = catchAsyncErrors(async (req, res, next) => {
   const { name, username, email, password, mobileNo, referralCode, country } =
     req.body;
 
   const errors = validationResult(req);
-  // console.log(errors.array()[0].msg);
   if (!errors.isEmpty()) {
     return next(new ErrorHandler(errors.array()[0].msg, 400));
   }

@@ -23,6 +23,8 @@ const cartRoutes = require("./Routes/cartRoutes");
 const gameLeaderBoard = require("./Routes/gameLeaderBoardRoute");
 const gameResult = require("./Routes/gameResultRoutes");
 const competition = require("./Routes/competitionRoutes");
+const swaggerUi = require("swagger-ui-express");
+const swaggerDocs = require("./swagger");
 
 // Initialize dotenv before using any environment variables
 dotenv.config();
@@ -57,11 +59,10 @@ app.use(cookieParser());
 
 // Database connection
 database();
-
 // Routes
-app.get("/", (req, res) => {
-  res.send("Welcome to Epic");
-});
+//setup swagger ui
+app.use("/api/v1/", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
 app.use("/api/v1/", user);
 app.use("/api/v1/", otp);
 app.use("/api/v1/", imageRoutes);
