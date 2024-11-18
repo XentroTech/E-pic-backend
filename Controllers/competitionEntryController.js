@@ -8,7 +8,6 @@ const BASE_URL = "http://localhost:3000/";
 
 exports.createEntry = catchAsyncErrors(async (req, res, next) => {
   const {
-    entryFee,
     title,
     description,
     category,
@@ -16,6 +15,7 @@ exports.createEntry = catchAsyncErrors(async (req, res, next) => {
     camera_model,
     camera_lens,
     captured_date,
+    entryFee,
   } = req.body;
   const currentCompetition = await Competition.findOne({}).sort({
     endDate: -1,

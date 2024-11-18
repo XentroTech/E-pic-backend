@@ -337,12 +337,10 @@ exports.likeImage = catchAsyncErrors(async (req, res, next) => {
 
   if (alreadyLiked) {
     image.likes.pull(userId);
-    image.likesCount -= 1;
     //updating user's liked_images attribute
     user.liked_images.pull(image._id);
   } else {
     image.likes.push(userId);
-    image.likesCount += 1;
     //updating user's liked_images attribute
     user.liked_images.push(image._id);
   }

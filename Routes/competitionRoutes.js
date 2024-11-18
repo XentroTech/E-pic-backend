@@ -10,7 +10,7 @@ const { isAuthenticated } = require("../middlewares/Auth");
 const { createEntry } = require("../Controllers/competitionEntryController");
 const {
   competitionLeaderBoard,
-} = require("../Controllers/competitionLeaderBoard");
+} = require("../Controllers/competitionLeaderBoardController");
 const upload = require("../middlewares/upload");
 
 router.post("/competition/create", isAuthenticated, createCompetition);

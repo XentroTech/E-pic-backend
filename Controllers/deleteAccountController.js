@@ -6,7 +6,7 @@ const ErrorHandler = require("../utils/errorHandler");
 exports.createDeleteAccountRequest = catchAsyncErrors(
   async (req, res, next) => {
     const user = req.user;
-
+    const { reason } = req.body;
     if (!user) {
       return next(new ErrorHandler("User not found", 404));
     }
@@ -16,6 +16,7 @@ exports.createDeleteAccountRequest = catchAsyncErrors(
       username: user.username,
       email: user.email,
       image_url: user.profile_pic,
+      reason,
     });
     res.status(200).json({
       success: true,
