@@ -4,7 +4,7 @@ const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const ErrorHandler = require("../utils/errorHandler");
 const processPayment = require("../utils/processPayment");
 const path = require("path");
-
+const BASE_URL = "http://localhost:3000/";
 //upload photo
 exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
   const imageCount = req.files.length;
@@ -49,7 +49,7 @@ exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
         description: description,
         category: category,
         // Store the file as a Buffer in MongoDB
-        image_url: `https://192.168.0.8:3000/uploads/${file.filename}`,
+        image_url: `${BASE_URL}${file.path.replace(/\\/g, "/")}`,
         owner: req.user._id,
         camera,
         camera_model,

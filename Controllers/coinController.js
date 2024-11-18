@@ -4,7 +4,6 @@ const ErrorHandler = require("../utils/errorHandler");
 const User = require("../Models/userModel");
 
 //create coin info
-// controllers/coinController.js
 
 exports.createCoinInfo = catchAsyncErrors(async (req, res, next) => {
   const { coin, price, image_url, extraCoins, promoExpiration } = req.body;
