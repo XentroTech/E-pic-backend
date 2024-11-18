@@ -22,6 +22,7 @@ const deleteAccountRoutes = require("./Routes/deleteAccountRoutes");
 const cartRoutes = require("./Routes/cartRoutes");
 const gameLeaderBoard = require("./Routes/gameLeaderBoardRoute");
 const gameResult = require("./Routes/gameResultRoutes");
+const competition = require("./Routes/competitionRoutes");
 
 // Initialize dotenv before using any environment variables
 dotenv.config();
@@ -74,6 +75,7 @@ app.use("/api/v1/", deleteAccountRoutes);
 app.use("/api/v1/", cartRoutes);
 app.use("/api/v1/", gameLeaderBoard);
 app.use("/api/v1/", gameResult);
+app.use("/api/v1/", competition);
 
 // Error middleware
 app.use(errorMiddleware);

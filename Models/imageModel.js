@@ -18,6 +18,7 @@ const imageSchema = new mongoose.Schema(
     owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     uploaded_at: { type: Date, default: Date.now },
     bought_by: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    competition: [{ type: mongoose.Schema.Types.ObjectId, ref: "Competition" }],
     isLive: { type: Boolean, default: false },
     isFeatured: { type: Boolean, default: false },
   },
