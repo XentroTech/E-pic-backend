@@ -26,6 +26,10 @@ router.post(
   createEntry
 );
 // competition leaderboard
-router.get("/competition/leaderboard", isAuthenticated, competitionLeaderBoard);
+router.post(
+  "/competition/leaderboard",
+  isAuthenticated,
+  competitionLeaderBoard
+);
 
 module.exports = router;

@@ -23,8 +23,9 @@ const cartRoutes = require("./Routes/cartRoutes");
 const gameLeaderBoard = require("./Routes/gameLeaderBoardRoute");
 const gameResult = require("./Routes/gameResultRoutes");
 const competition = require("./Routes/competitionRoutes");
-const swaggerUi = require("swagger-ui-express");
-const swaggerDocs = require("./swagger");
+const game = require("./Routes/gameRoutes");
+// const swaggerUi = require("swagger-ui-express");
+// const swaggerDocs = require("./swagger");
 
 // Initialize dotenv before using any environment variables
 dotenv.config();
@@ -61,7 +62,10 @@ app.use(cookieParser());
 database();
 // Routes
 //setup swagger ui
-app.use("/api/v1/", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+// app.use("/api/v1/", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+// app.use("/api/v1/", (res) => {
+//   res.send(" Welcome to E-pic");
+// });
 
 app.use("/api/v1/", user);
 app.use("/api/v1/", otp);
@@ -76,6 +80,7 @@ app.use("/api/v1/", deleteAccountRoutes);
 app.use("/api/v1/", cartRoutes);
 app.use("/api/v1/", gameLeaderBoard);
 app.use("/api/v1/", gameResult);
+app.use("/api/v1/", game);
 app.use("/api/v1/", competition);
 
 // Error middleware
