@@ -5,6 +5,7 @@ const ErrorHandler = require("../utils/errorHandler");
 const processPayment = require("../utils/processPayment");
 const path = require("path");
 const BASE_URL = "http://localhost:3000/";
+
 //upload photo
 exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
   const imageCount = req.files.length;
@@ -354,6 +355,7 @@ exports.likeImage = catchAsyncErrors(async (req, res, next) => {
     likesCount: image.likes.length,
   });
 });
+
 //purchase Image
 exports.purchaseImage = catchAsyncErrors(async (req, res, next) => {
   const { userId, imageId, price } = req.body;
