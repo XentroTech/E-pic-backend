@@ -235,7 +235,10 @@ exports.getLiveImages = catchAsyncErrors(async (req, res, next) => {
 
 // get an image
 exports.getAnImage = catchAsyncErrors(async (req, res, next) => {
-  const image = await Image.findById(req.params.id);
+  const image = await Image.findById(req.params.id).populate(
+    "owner",
+    "_id name profile_pic"
+  );
 
   if (!image) {
     return next(new ErrorHandler("Image not found", 404));
