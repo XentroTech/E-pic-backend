@@ -84,7 +84,7 @@ exports.getAllImages = catchAsyncErrors(async (req, res, next) => {
     // If search query exists, search by username, email, or mobile
     searchCriteria = {
       $or: [
-        { userId: { $regex: query, $options: "i" } }, // Case-insensitive search
+        { userId: { $regex: query, $options: "i" } },
         { email: { $regex: query, $options: "i" } },
       ],
     };
@@ -95,7 +95,7 @@ exports.getAllImages = catchAsyncErrors(async (req, res, next) => {
 
   // Use aggregate to fetch images along with owner details
   const images = await Image.aggregate([
-    { $match: searchCriteria }, // Match images based on search criteria
+    { $match: searchCriteria },
     {
       $lookup: {
         from: "users",
@@ -106,10 +106,10 @@ exports.getAllImages = catchAsyncErrors(async (req, res, next) => {
     },
     { $unwind: "$ownerDetails" },
     {
-      $skip: (page - 1) * limit, // Skip previous pages
+      $skip: (page - 1) * limit,
     },
     {
-      $limit: parseInt(limit), // Limit the results
+      $limit: parseInt(limit),
     },
   ]);
 
@@ -136,7 +136,7 @@ exports.getPendingImages = catchAsyncErrors(async (req, res, next) => {
     // If search query exists, search by username, email, or mobile
     searchCriteria = {
       $or: [
-        { userId: { $regex: query, $options: "i" } }, // Case-insensitive search
+        { userId: { $regex: query, $options: "i" } },
         { email: { $regex: query, $options: "i" } },
       ],
     };
@@ -147,8 +147,8 @@ exports.getPendingImages = catchAsyncErrors(async (req, res, next) => {
 
   // Use aggregate to fetch images along with owner details
   const images = await Image.aggregate([
-    { $match: searchCriteria }, // Match images based on search criteria
-    { $match: { isLive: false } }, // only live images
+    { $match: searchCriteria },
+    { $match: { isLive: false } },
     {
       $lookup: {
         from: "users",
@@ -159,10 +159,10 @@ exports.getPendingImages = catchAsyncErrors(async (req, res, next) => {
     },
     { $unwind: "$ownerDetails" },
     {
-      $skip: (page - 1) * limit, // Skip previous pages
+      $skip: (page - 1) * limit,
     },
     {
-      $limit: parseInt(limit), // Limit the results
+      $limit: parseInt(limit),
     },
   ]);
 
@@ -189,7 +189,7 @@ exports.getLiveImages = catchAsyncErrors(async (req, res, next) => {
     // If search query exists, search by username, email, or mobile
     searchCriteria = {
       $or: [
-        { userId: { $regex: query, $options: "i" } }, // Case-insensitive search
+        { userId: { $regex: query, $options: "i" } },
         { email: { $regex: query, $options: "i" } },
       ],
     };
@@ -200,8 +200,8 @@ exports.getLiveImages = catchAsyncErrors(async (req, res, next) => {
 
   // Use aggregate to fetch images along with owner details
   const images = await Image.aggregate([
-    { $match: searchCriteria }, // Match images based on search criteria
-    { $match: { isLive: true } }, // only live images
+    { $match: searchCriteria },
+    { $match: { isLive: true } },
     {
       $lookup: {
         from: "users",
@@ -212,10 +212,10 @@ exports.getLiveImages = catchAsyncErrors(async (req, res, next) => {
     },
     { $unwind: "$ownerDetails" },
     {
-      $skip: (page - 1) * limit, // Skip previous pages
+      $skip: (page - 1) * limit,
     },
     {
-      $limit: parseInt(limit), // Limit the results
+      $limit: parseInt(limit),
     },
   ]);
 
@@ -341,10 +341,12 @@ exports.likeImage = catchAsyncErrors(async (req, res, next) => {
 
   if (alreadyLiked) {
     image.likes.pull(userId);
+    image.likesCount = Math.max(0, image.likesCount - 1);
     //updating user's liked_images attribute
     user.liked_images.pull(image._id);
   } else {
     image.likes.push(userId);
+    image.likesCount += 1;
     //updating user's liked_images attribute
     user.liked_images.push(image._id);
   }
@@ -355,7 +357,6 @@ exports.likeImage = catchAsyncErrors(async (req, res, next) => {
     success: true,
     statusCode: 200,
     message: alreadyLiked ? "unlike the image" : "liked the image",
-    likesCount: image.likes.length,
   });
 });
 
