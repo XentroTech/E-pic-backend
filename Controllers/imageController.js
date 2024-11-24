@@ -365,6 +365,14 @@ exports.purchaseImage = catchAsyncErrors(async (req, res, next) => {
   const { userId, imageId, price } = req.body;
   const user = await User.findById(userId);
 
+  if (user.purchased_images.includes({ image: imageId })) {
+    return next(
+      new ErrorHandler(
+        "you have already purchased the image. try after few days"
+      )
+    );
+  }
+
   if (user.wallet < price) {
     return next(
       new ErrorHandler("Insufficient Coin Please Purchase Coin", 401)

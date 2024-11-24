@@ -496,16 +496,28 @@ exports.followUser = catchAsyncErrors(async (req, res, next) => {
 exports.getPurchasedImages = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findById(req.params.id).populate({
     path: "purchased_images",
-    populate: { path: "image", select: "image_url likes likesCount title" },
+    populate: {
+      path: "image",
+      select: "image_url likes likesCount title bought_by",
+    },
   });
-  console.log(user);
   if (!user) {
     return next(new ErrorHandler("User not Found", 404));
   }
   const purchased_images = user.purchased_images;
+
+  const purchasedImages = purchased_images.filter((imageObj) => {
+    if (imageObj.image && imageObj.image.bought_by) {
+      return imageObj.image.bought_by.includes(user._id);
+    }
+    return false;
+  });
+
+  console.log(purchasedImages);
+
   res.status(200).send({
     success: true,
     message: "successfully fetched purchased images",
-    purchased_images,
+    purchasedImages,
   });
 });
