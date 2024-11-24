@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const gameResultSchema = new Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   imageId: { type: mongoose.Schema.Types.ObjectId, ref: "Image" },
-  duration: { type: Number },
+  duration: { type: String },
   createdAt: { type: Date, default: Date.now() },
 });
 

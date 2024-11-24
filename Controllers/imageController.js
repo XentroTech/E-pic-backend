@@ -370,7 +370,10 @@ exports.purchaseImage = catchAsyncErrors(async (req, res, next) => {
       new ErrorHandler("Insufficient Coin Please Purchase Coin", 401)
     );
   }
-  const image = await Image.findById(imageId);
+  const image = await Image.findById(imageId).populate(
+    "owner",
+    "_id name profile_pic"
+  );
   //updating user wallet
   user.wallet -= price;
   // updating sold count of purchased image
