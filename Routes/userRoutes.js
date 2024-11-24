@@ -89,6 +89,6 @@ router.post(
 );
 
 // get purchased images
-router.get("/user/purchased_images/:id", isAuthenticated, getPurchasedImages);
+router.get("/user/purchasedImages/:id", isAuthenticated, getPurchasedImages);
 
 module.exports = router;

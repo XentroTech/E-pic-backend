@@ -494,7 +494,7 @@ exports.followUser = catchAsyncErrors(async (req, res, next) => {
 
 //get user's purchased images
 exports.getPurchasedImages = catchAsyncErrors(async (req, res, next) => {
-  const user = await User.findById(req.params.id).populate({
+  const user = await User.findById(req.user.id).populate({
     path: "purchased_images",
     populate: { path: "image", select: "image_url likes likesCount title" },
   });
@@ -503,7 +503,6 @@ exports.getPurchasedImages = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("User not Found", 404));
   }
   const purchased_images = user.purchased_images;
-  console.log(purchased_images);
   res.status(200).send({
     success: true,
     message: "successfully fetched purchased images",
