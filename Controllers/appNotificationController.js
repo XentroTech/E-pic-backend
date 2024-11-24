@@ -3,6 +3,7 @@ const AppNotification = require("../Models/appNotificationModel");
 const User = require("../Models/userModel");
 const ErrorHandler = require("../utils/errorHandler");
 
+// send notification to users
 exports.sendNotification = catchAsyncErrors(async (req, res, next) => {
   const { title, message } = req.body;
   const users = await User.find({});
@@ -22,7 +23,7 @@ exports.sendNotification = catchAsyncErrors(async (req, res, next) => {
     message: "Notification has been send to users",
   });
 });
-
+//get all notifications
 exports.getAllNotification = catchAsyncErrors(async (req, res, next) => {
   const notifications = await AppNotification.find({});
   if (!notifications) {
@@ -35,6 +36,7 @@ exports.getAllNotification = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
+// get user's notification
 exports.getUserNotifications = catchAsyncErrors(async (req, res, next) => {
   const notifications = await AppNotification.find({ user: req.user._id }).sort(
     { createdAt: -1 }
@@ -46,5 +48,29 @@ exports.getUserNotifications = catchAsyncErrors(async (req, res, next) => {
     success: true,
     message: "successfully fetched notifications",
     notifications,
+  });
+});
+
+// notification seen unseen
+exports.notificationSeenUnseen = catchAsyncErrors(async (req, res, next) => {
+  const notification = await AppNotification.findById(req.params.id);
+
+  if (!notification) {
+    return next(new ErrorHandler("notification not found", 404));
+  }
+
+  if (notification.isSeen) {
+    notification.isSeen = false;
+  } else {
+    notification.isSeen = true;
+  }
+  await notification.save();
+  res.status(200).json({
+    success: true,
+    message: `${
+      notification.isSeen
+        ? "Notification has been seen"
+        : "Notification has been unseen"
+    }`,
   });
 });
