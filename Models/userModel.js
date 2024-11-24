@@ -57,6 +57,14 @@ const userSchema = new Schema(
     liked_images: [
       { type: mongoose.Schema.Types.ObjectId, ref: "Image", default: [] },
     ],
+    purchased_images: [
+      {
+        image: { type: mongoose.Schema.Types.ObjectId, ref: "Image" },
+        isUsedForGame: { type: Boolean, default: false },
+        isUsedForCompetition: { type: Boolean, default: false },
+        purchased_at: { type: Date, default: Date.now() },
+      },
+    ],
     role: {
       type: String,
       enum: ["superadmin", "admin", "moderator", "user"],

@@ -379,6 +379,8 @@ exports.purchaseImage = catchAsyncErrors(async (req, res, next) => {
   image.owner.total_sells += price;
   //updating image buyer's info
   image.bought_by.push(user._id);
+  //updating user's purchased images
+  user.purchased_images.push({ image: image._id });
 
   await image.save();
   await user.save();

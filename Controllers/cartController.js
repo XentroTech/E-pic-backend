@@ -48,7 +48,10 @@ exports.getCart = catchAsyncErrors(async (req, res, next) => {
   }
 
   // Fetch all items in the user's cart
-  const cartItems = await Cart.find({ user: req.user._id }).populate("image");
+  const cartItems = await Cart.find({ user: req.user._id }).populate({
+    path: "image",
+    populate: { path: "owner", select: "name profile_pic" },
+  });
   if (!cartItems || cartItems.length === 0) {
     return res.status(200).json({
       success: true,
