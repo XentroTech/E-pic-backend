@@ -18,6 +18,7 @@ const {
   getUsers,
   activeOrDeactivateUser,
   getPurchasedImages,
+  get_purchased_images,
 } = require("../Controllers/userController");
 const { loginValidator } = require("../middlewares/loginValidator");
 const { registerValidator } = require("../middlewares/registerValidator");
@@ -88,7 +89,7 @@ router.post(
   activeOrDeactivateUser
 );
 
-// get purchased images
+//get purchased images
 router.get("/user/purchasedImages/:id", isAuthenticated, getPurchasedImages);
 
 module.exports = router;

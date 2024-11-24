@@ -62,7 +62,7 @@ const userSchema = new Schema(
         image: { type: mongoose.Schema.Types.ObjectId, ref: "Image" },
         isUsedForGame: { type: Boolean, default: false },
         isUsedForCompetition: { type: Boolean, default: false },
-        purchased_at: { type: Date, default: Date.now() },
+        purchased_at: { type: Date, default: Date.now },
       },
     ],
     role: {
