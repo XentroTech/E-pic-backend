@@ -9,10 +9,12 @@ exports.createGameResult = catchAsyncErrors(async (req, res, next) => {
 
   const image = await Image.findById(imageId);
 
-  const gameImage = image.bought_by.includes(req.user._id);
+  const purchasedImage = req.user.purchased_images.find(
+    (img) => img.image.toString() === imageId && !img.isUsedForGame
+  );
 
-  if (!gameImage) {
-    return next(new ErrorHandler("Please Buy An Image"));
+  if (!purchasedImage) {
+    return next(new ErrorHandler("Please buy the image or wait 15 days."));
   }
 
   //creating new game result to the model
@@ -31,8 +33,9 @@ exports.createGameResult = catchAsyncErrors(async (req, res, next) => {
   await updateLeaderBoard.save();
 
   // removing the buyer id from the image
-  image.bought_by.pull(req.user._id);
-  await image.save();
+  purchasedImage.isUsedForGame = true;
+  purchasedImage.played_at = new Date();
+  await req.user.save();
 
   res.status(200).json({
     success: true,

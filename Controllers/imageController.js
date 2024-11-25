@@ -360,37 +360,44 @@ exports.likeImage = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-//purchase Image
 exports.purchaseImage = catchAsyncErrors(async (req, res, next) => {
   const { userId, imageId, price } = req.body;
   const user = await User.findById(userId);
 
-  if (user.purchased_images.includes({ image: imageId })) {
-    return next(
-      new ErrorHandler(
-        "you have already purchased the image. try after few days"
-      )
-    );
+  const purchasedImage = user.purchased_images.find(
+    (img) => img.image.toString() === imageId
+  );
+
+  if (purchasedImage) {
+    if (
+      purchasedImage.isUsedForGame &&
+      new Date() - new Date(purchasedImage.played_at) < 15 * 24 * 60 * 60 * 1000
+    ) {
+      return next(
+        new ErrorHandler(
+          "You cannot purchase this image again within 15 days of playing."
+        )
+      );
+    }
+
+    return next(new ErrorHandler("You have already purchased this image."));
   }
 
   if (user.wallet < price) {
-    return next(
-      new ErrorHandler("Insufficient Coin Please Purchase Coin", 401)
-    );
+    return next(new ErrorHandler("Insufficient coins please buy coin.", 401));
   }
+
   const image = await Image.findById(imageId).populate(
     "owner",
     "_id name profile_pic"
   );
-  //updating user wallet
+
   user.wallet -= price;
-  // updating sold count of purchased image
+
+  // Update image and user data
   image.sold_count += 1;
-  //updating image owner's total_sales
-  image.owner.total_sells += price;
-  //updating image buyer's info
+  image.owner.total_sales += price;
   image.bought_by.push(user._id);
-  //updating user's purchased images
   user.purchased_images.push({ image: image._id });
 
   await image.save();
@@ -398,8 +405,7 @@ exports.purchaseImage = catchAsyncErrors(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    statusCode: 200,
-    message: "successfully purchase the image",
+    message: "Successfully purchased the image",
     image,
   });
 });

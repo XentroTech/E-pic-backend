@@ -18,7 +18,6 @@ exports.issueWarning = catchAsyncErrors(async (req, res) => {
 
     if (warning.warningCount >= 3) {
       warning.suspended = true;
-      // Add additional logic for suspension (e.g., notify the user)
     }
 
     await warning.save();

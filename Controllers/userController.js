@@ -492,32 +492,24 @@ exports.followUser = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-//get user's purchased images
+// get purchased images
 exports.getPurchasedImages = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findById(req.params.id).populate({
-    path: "purchased_images",
-    populate: {
-      path: "image",
-      select: "image_url likes likesCount title bought_by",
-    },
+    path: "purchased_images.image",
+    select: "image_url likes likesCount title bought_by",
   });
+
   if (!user) {
-    return next(new ErrorHandler("User not Found", 404));
+    return next(new ErrorHandler("User not found", 404));
   }
-  const purchased_images = user.purchased_images;
 
-  const purchasedImages = purchased_images.filter((imageObj) => {
-    if (imageObj.image && imageObj.image.bought_by) {
-      return imageObj.image.bought_by.includes(user._id);
-    }
-    return false;
-  });
+  const purchasedImages = user.purchased_images.filter(
+    (img) => !img.isUsedForGame
+  );
 
-  console.log(purchasedImages);
-
-  res.status(200).send({
+  res.status(200).json({
     success: true,
-    message: "successfully fetched purchased images",
+    message: "Successfully fetched purchased images",
     purchasedImages,
   });
 });

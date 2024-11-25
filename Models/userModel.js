@@ -63,6 +63,7 @@ const userSchema = new Schema(
         isUsedForGame: { type: Boolean, default: false },
         isUsedForCompetition: { type: Boolean, default: false },
         purchased_at: { type: Date, default: Date.now },
+        played_at: { type: Date },
       },
     ],
     role: {
