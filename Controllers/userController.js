@@ -162,7 +162,7 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler(error.message, 500));
   }
 });
-
+//reset password otp verify
 exports.resetPasswordOtpVerify = catchAsyncErrors(async (req, res, next) => {
   const { otp } = req.body;
   //otp sanitization and validation
@@ -191,6 +191,7 @@ exports.resetPasswordOtpVerify = catchAsyncErrors(async (req, res, next) => {
     message: "Otp verified successfully",
   });
 });
+// reset password
 exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
   const { password } = req.body;
   const email = req.params.email;
