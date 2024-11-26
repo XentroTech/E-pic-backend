@@ -11,13 +11,11 @@ exports.getGameLeaderBoard = catchAsyncErrors(async (req, res, next) => {
     date = today.toISOString().split("T")[0];
   }
 
-  // Define the start and end of the day
   const startOfDay = new Date(date);
   const endOfDay = new Date(date);
   endOfDay.setUTCHours(23, 59, 59, 999);
 
   try {
-    // Query the leaderboard for results within the date range
     const leaderBoard = await GameLeaderBoard.find({
       date: {
         $gte: startOfDay,

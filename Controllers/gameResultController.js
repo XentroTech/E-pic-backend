@@ -7,7 +7,7 @@ const GameLeaderBoard = require("../Models/gameLeaderBoardModel");
 exports.createGameResult = catchAsyncErrors(async (req, res, next) => {
   const { imageId, duration } = req.body;
 
-  if (duration === 0.0) {
+  if (duration <= 0) {
     return res.status(400).json({
       success: false,
       message: "Game result 0",
@@ -42,7 +42,7 @@ exports.createGameResult = catchAsyncErrors(async (req, res, next) => {
 
   const userLeaderBoardEntry = await GameLeaderBoard.findOne({
     user: req.user._id,
-    createdAt: { $gte: today },
+    date: { $gte: today },
   });
 
   if (userLeaderBoardEntry) {

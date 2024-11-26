@@ -25,6 +25,7 @@ const gameResult = require("./Routes/gameResultRoutes");
 const competition = require("./Routes/competitionRoutes");
 const game = require("./Routes/gameRoutes");
 const appNotification = require("./Routes/appNotificationRoutes");
+const contactMessage = require("./Routes/contactRoutes");
 // const swaggerUi = require("swagger-ui-express");
 // const swaggerDocs = require("./swagger");
 
@@ -84,6 +85,7 @@ app.use("/api/v1/", gameResult);
 app.use("/api/v1/", game);
 app.use("/api/v1/", competition);
 app.use("/api/v1/", appNotification);
+app.use("/api/v1/", contactMessage);
 
 // Error middleware
 app.use(errorMiddleware);
