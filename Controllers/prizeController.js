@@ -217,7 +217,7 @@ exports.distributePrizes = catchAsyncErrors(async (req, res, next) => {
   }
 
   // Fetch prizes for the day
-  const prizes = await Prize.find({ date: date }).sort({ rank: 1 });
+  const prizes = await Prize.find().sort({ rank: 1 });
   console.log("prize:", prizes);
   if (!prizes || prizes.length === 0) {
     return next(new ErrorHandler("Prizes not set for the given date.", 404));

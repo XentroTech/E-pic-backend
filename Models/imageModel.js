@@ -10,6 +10,13 @@ const imageSchema = new mongoose.Schema(
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     likesCount: { type: Number, default: 0 },
     sold_count: { type: Number, default: 0 },
+    sold_details: [
+      {
+        buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        date: { type: Date, default: Date.now },
+        price: { type: Number, required: true },
+      },
+    ],
     camera: { type: String },
     camera_model: { type: String },
     camera_lens: { type: String, default: "" },

@@ -7,41 +7,64 @@ const GameLeaderBoard = require("../Models/gameLeaderBoardModel");
 exports.createGameResult = catchAsyncErrors(async (req, res, next) => {
   const { imageId, duration } = req.body;
 
+  if (duration === 0.0) {
+    return res.status(400).json({
+      success: false,
+      message: "Game result 0",
+    });
+  }
+
   const image = await Image.findById(imageId);
+  if (!image) {
+    return next(new ErrorHandler("Image not found.", 404));
+  }
 
   const purchasedImage = req.user.purchased_images.find(
     (img) => img.image.toString() === imageId && !img.isUsedForGame
   );
 
   if (!purchasedImage) {
-    return next(new ErrorHandler("Please buy the image or wait 15 days."));
+    return next(
+      new ErrorHandler(
+        "Buy an another image, you have already played with this image "
+      )
+    );
   }
 
-  //creating new game result to the model
   const newGameResult = await GameResult.create({
     userId: req.user._id,
     imageId,
     duration,
   });
-  await newGameResult.save();
-  // updating the leaderboard
-  const updateLeaderBoard = await GameLeaderBoard.create({
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const userLeaderBoardEntry = await GameLeaderBoard.findOne({
     user: req.user._id,
-    duration,
+    createdAt: { $gte: today },
   });
 
-  await updateLeaderBoard.save();
+  if (userLeaderBoardEntry) {
+    if (duration < userLeaderBoardEntry.duration) {
+      userLeaderBoardEntry.duration = duration;
+      await userLeaderBoardEntry.save();
+    }
+  } else {
+    await GameLeaderBoard.create({
+      user: req.user._id,
+      duration,
+    });
+  }
 
-  // removing the buyer id from the image
   purchasedImage.isUsedForGame = true;
   purchasedImage.played_at = new Date();
   await req.user.save();
 
   res.status(200).json({
     success: true,
-    message: "Game result created Successfully",
+    message: "Game result created successfully and leaderboard updated.",
     newGameResult,
-    updateLeaderBoard,
   });
 });
 

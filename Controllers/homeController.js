@@ -2,6 +2,7 @@ const Image = require("../Models/imageModel");
 const User = require("../Models/userModel");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const ErrorHandler = require("../utils/errorHandler");
+const mongoose = require("mongoose");
 
 //get Top sellers
 exports.getTopSellers = catchAsyncErrors(async (req, res, next) => {
@@ -315,3 +316,171 @@ exports.search = catchAsyncErrors(async (req, res) => {
 
 // ad banner
 exports.createAdBanner = catchAsyncErrors(async (req, res, next) => {});
+
+// exports.getChartData = catchAsyncErrors(async (req, res, next) => {
+//   const { userId, interval = "daily" } = req.query;
+
+//   const validIntervals = ["daily", "weekly", "monthly", "yearly"];
+
+//   if (!validIntervals.includes(interval)) {
+//     return next(new ErrorHandler("Invalid interval provided", 400));
+//   }
+
+//   if (!userId) {
+//     return next(new ErrorHandler("User ID is required", 400));
+//   }
+
+//   const matchStage = {
+//     $match: { owner: userId },
+//   };
+
+//   let groupStage;
+
+//   switch (interval) {
+//     case "daily":
+//       groupStage = {
+//         $group: {
+//           _id: {
+//             $dateToString: { format: "%Y-%m-%d", date: "$sold_details.date" },
+//           },
+//           // count: { $sum: 1 },
+//           // totalEarnings: { $sum: "$sold_details.price" },
+//         },
+//       };
+//       break;
+//     case "weekly":
+//       groupStage = {
+//         $group: {
+//           _id: {
+//             $dateToString: { format: "%Y-%U", date: "$sold_details.date" },
+//           },
+//           // count: { $sum: 1 },
+//           // totalEarnings: { $sum: "$sold_details.price" },
+//         },
+//       };
+//       break;
+//     case "monthly":
+//       groupStage = {
+//         $group: {
+//           _id: {
+//             $dateToString: { format: "%Y-%m", date: "$sold_details.date" },
+//           },
+//           // count: { $sum: 1 },
+//           // totalEarnings: { $sum: "$sold_details.price" },
+//         },
+//       };
+//       break;
+//     case "yearly":
+//       groupStage = {
+//         $group: {
+//           _id: {
+//             $dateToString: { format: "%Y", date: "$sold_details.date" },
+//           },
+//           // count: { $sum: 1 },
+//           // totalEarnings: { $sum: "$sold_details.price" },
+//         },
+//       };
+//       break;
+//     default:
+//       return next(new ErrorHandler("Invalid interval provided", 400));
+//   }
+
+//   groupStage.count = { $sum: 1 };
+//   groupStage.totalEarnings = { $sum: "$sold_details.price" };
+
+//   const chartData = await Image.aggregate([
+//     { $unwind: "$sold_details" },
+//     { $match: { owner: req.user._id } },
+//     {
+//       $group: groupStage,
+//     },
+//   ]);
+//   console.log(chartData);
+//   res.status(200).send({
+//     success: true,
+//     interval,
+//     chartData,
+//   });
+// });
+
+exports.getChartData = catchAsyncErrors(async (req, res, next) => {
+  const { interval = "daily" } = req.query;
+
+  const validIntervals = ["daily", "weekly", "monthly", "yearly"];
+  if (!validIntervals.includes(interval)) {
+    return next(new ErrorHandler("Invalid interval provided", 400));
+  }
+
+  const userId = req.user._id;
+  if (!userId) {
+    return next(new ErrorHandler("User ID is required", 400));
+  }
+
+  const matchStage = { $match: { owner: userId } };
+  let groupStage;
+
+  switch (interval) {
+    case "daily":
+      groupStage = {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$sold_details.date" },
+          },
+          count: { $sum: 1 },
+          totalEarnings: { $sum: "$sold_details.price" },
+        },
+      };
+      break;
+    case "weekly":
+      groupStage = {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%U", date: "$sold_details.date" },
+          },
+          count: { $sum: 1 },
+          totalEarnings: { $sum: "$sold_details.price" },
+        },
+      };
+      break;
+    case "monthly":
+      groupStage = {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m", date: "$sold_details.date" },
+          },
+          count: { $sum: 1 },
+          totalEarnings: { $sum: "$sold_details.price" },
+        },
+      };
+      break;
+    case "yearly":
+      groupStage = {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y", date: "$sold_details.date" },
+          },
+          count: { $sum: 1 },
+          totalEarnings: { $sum: "$sold_details.price" },
+        },
+      };
+      break;
+    default:
+      return next(new ErrorHandler("Invalid interval provided", 400));
+  }
+
+  try {
+    const chartData = await Image.aggregate([
+      { $unwind: "$sold_details" },
+      matchStage,
+      groupStage,
+    ]);
+
+    res.status(200).send({
+      success: true,
+      interval,
+      chartData,
+    });
+  } catch (error) {
+    return next(new ErrorHandler("Failed to fetch chart data", 500));
+  }
+});

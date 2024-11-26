@@ -104,3 +104,53 @@ exports.clearCart = catchAsyncErrors(async (req, res, next) => {
     message: "Cart cleared successfully",
   });
 });
+
+//purchase all cart items
+exports.purchaseAllCartItems = catchAsyncErrors(async (req, res, next) => {
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    return next(new ErrorHandler("User not found", 404));
+  }
+
+  const cartItems = await Cart.find({ user: req.user._id }).populate("image");
+
+  if (!cartItems || cartItems.length === 0) {
+    return next(new ErrorHandler("Your cart is empty", 400));
+  }
+
+  const totalCost = cartItems.reduce((sum, item) => sum + item.image.price, 0);
+
+  if (user.wallet < totalCost) {
+    return next(
+      new ErrorHandler("Insufficient coins. Please recharge your wallet.", 400)
+    );
+  }
+
+  user.wallet -= totalCost;
+
+  for (const cartItem of cartItems) {
+    const image = cartItem.image;
+
+    image.sold_details.push({
+      buyer: user._id,
+      date: new Date(),
+      price: image.price,
+    });
+
+    image.sold_count += 1;
+
+    user.purchased_images.push({ image: image._id });
+
+    await image.save();
+  }
+
+  await Cart.deleteMany({ user: req.user._id });
+
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    statusCode: 200,
+    message: "All cart items purchased successfully",
+  });
+});
