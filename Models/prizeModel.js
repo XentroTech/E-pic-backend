@@ -6,14 +6,28 @@ const prizeSchema = new Schema({
     type: String,
     required: true,
   },
-  title: {
+  type: {
+    type: String,
+    enum: ["coin", "physical"],
+    required: true,
+  },
+  name: {
     type: String,
     required: true,
   },
-  position: {
+  rank: {
     type: String,
     required: true,
+  },
+  value: {
+    type: Number,
+    required: true,
+  },
+  date: {
+    type: Date,
+    default: Date.now,
   },
 });
 
-module.exports = mongoose.model("Prize", prizeSchema);
+const Prize = mongoose.model("Prize", prizeSchema);
+module.exports = Prize;

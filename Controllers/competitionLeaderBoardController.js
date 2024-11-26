@@ -23,7 +23,6 @@ exports.competitionLeaderBoard = catchAsyncErrors(async (req, res, next) => {
       $lte: endOfDay,
     },
   });
-  console.log(competition);
   const images = await Image.find({ competition: competition._id })
     .sort({ likesCount: -1 })
     .populate("owner", "name email profile_pic")

@@ -17,6 +17,8 @@ const {
   updateUserRole,
   getUsers,
   activeOrDeactivateUser,
+  getPurchasedImages,
+  get_purchased_images,
 } = require("../Controllers/userController");
 const { loginValidator } = require("../middlewares/loginValidator");
 const { registerValidator } = require("../middlewares/registerValidator");
@@ -86,5 +88,8 @@ router.post(
   authorizeRoles("admin", "superadmin"),
   activeOrDeactivateUser
 );
+
+//get purchased images
+router.get("/user/purchasedImages/:id", isAuthenticated, getPurchasedImages);
 
 module.exports = router;

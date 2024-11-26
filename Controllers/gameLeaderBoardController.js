@@ -27,7 +27,6 @@ exports.getGameLeaderBoard = catchAsyncErrors(async (req, res, next) => {
       .populate("user", "name profile_pic")
       .sort({ duration: 1 })
       .limit(10);
-
     if (!leaderBoard || leaderBoard.length === 0) {
       return res.status(404).json({
         success: false,

@@ -47,6 +47,7 @@ router.delete("/image/delete/:id", isAuthenticated, deleteImage);
 router.post("/image/like/:id", isAuthenticated, likeImage);
 //purchase image
 router.post("/image/purchase", isAuthenticated, purchaseImage);
+
 //purchase space
 // router.post("/purchaseSpace", isAuthenticated, purchaseSpace);
 

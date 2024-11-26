@@ -8,7 +8,7 @@ const processPayment = require("../utils/processPayment.js");
 const crypto = require("crypto");
 const { validationResult } = require("express-validator");
 const Image = require("../Models/imageModel.js");
-const BASE_URL = "https://e-pic.co";
+const BASE_URL = "http://localhost:300";
 
 //register
 exports.register = catchAsyncErrors(async (req, res, next) => {
@@ -492,4 +492,24 @@ exports.followUser = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-//
+// get purchased images
+exports.getPurchasedImages = catchAsyncErrors(async (req, res, next) => {
+  const user = await User.findById(req.params.id).populate({
+    path: "purchased_images.image",
+    select: "image_url likes likesCount title bought_by",
+  });
+
+  if (!user) {
+    return next(new ErrorHandler("User not found", 404));
+  }
+
+  const purchasedImages = user.purchased_images.filter(
+    (img) => !img.isUsedForGame
+  );
+
+  res.status(200).json({
+    success: true,
+    message: "Successfully fetched purchased images",
+    purchasedImages,
+  });
+});
