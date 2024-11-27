@@ -28,8 +28,35 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
   if (referralCode) {
     const referredUser = await User.findOne({ username: referralCode });
     if (referredUser) {
-      referredUser.wallet += 10;
-      await referredUser.save();
+      if (referredUser.referred_users_details.length <= 3) {
+        referredUser.wallet += 10;
+        referredUser.referred_users_details.push({
+          user_email: email,
+          referralBonus: 10,
+        });
+        await referredUser.save();
+      } else if (referredUser.referred_users_details.length <= 7) {
+        referredUser.wallet += 20;
+        referredUser.referred_users_details.push({
+          user_email: email,
+          referralBonus: 20,
+        });
+        await referredUser.save();
+      } else if (referredUser.referred_users_details.length <= 10) {
+        referredUser.wallet += 30;
+        referredUser.referred_users_details.push({
+          user_email: email,
+          referralBonus: 30,
+        });
+        await referredUser.save();
+      } else if (referredUser.referred_users_details.length > 10) {
+        referredUser.wallet += 5;
+        referredUser.referred_users_details.push({
+          user_email: email,
+          referralBonus: 5,
+        });
+        await referredUser.save();
+      }
     } else {
       return next(
         new ErrorHandler(
@@ -512,5 +539,27 @@ exports.getPurchasedImages = catchAsyncErrors(async (req, res, next) => {
     success: true,
     message: "Successfully fetched purchased images",
     purchasedImages,
+  });
+});
+
+// user referral bonus details
+exports.getReferralBonusDetails = catchAsyncErrors(async (req, res, next) => {
+  const user = await User.findById(req.user._id);
+  console.log(user);
+  console.log("entered into the function");
+  const referralBonus = await User.aggregate([
+    { $match: { _id: user._id } },
+    {
+      $group: {
+        _id: null,
+        count: { $sum: 1 },
+        totalEarnings: { $sum: "$referred_users_details.referralBonus" },
+      },
+    },
+  ]);
+
+  res.status(200).send({
+    success: true,
+    referralBonus,
   });
 });

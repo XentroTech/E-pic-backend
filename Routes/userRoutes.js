@@ -19,6 +19,7 @@ const {
   activeOrDeactivateUser,
   getPurchasedImages,
   get_purchased_images,
+  getReferralBonusDetails,
 } = require("../Controllers/userController");
 const { loginValidator } = require("../middlewares/loginValidator");
 const { registerValidator } = require("../middlewares/registerValidator");
@@ -52,11 +53,12 @@ router.patch(
 );
 
 //follow user
-router.post("/user/follow/:id", isAuthenticated, followUser);
-// //get top seller
-// router.get("/topSellers", isAuthenticated, getTopSellers);
+router.post("/follow/:id", isAuthenticated, followUser);
+
 //purchase coin
 router.post("/purchaseCoin", isAuthenticated, purchaseCoin);
+//referral bonus
+router.get("/referralBonus", isAuthenticated, getReferralBonusDetails);
 
 //admin routes
 

@@ -42,8 +42,11 @@ const userSchema = new Schema(
       type: String,
     },
     referralCode: { type: String, default: "" },
-    referredUsers: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] },
+    referred_users_details: [
+      {
+        user_email: { type: String },
+        referralBonus: { type: Number, default: 0 },
+      },
     ],
     profile_pic: { type: String, default: "" },
     cover_pic: { type: String, default: "" },

@@ -1,8 +1,10 @@
 const express = require("express");
 const { isAuthenticated } = require("../middlewares/Auth");
-const { sendNotification } = require("../Controllers/notificationController");
+const {
+  sendNotification,
+} = require("../Controllers/appNotificationController");
 const router = express.Router();
 
-router.post(" /send-notification", isAuthenticated, sendNotification);
+router.post("/user/send-notification", isAuthenticated, sendNotification);
 
 module.exports = router;

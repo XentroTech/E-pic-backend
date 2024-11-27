@@ -6,6 +6,7 @@ const ErrorHandler = require("../utils/errorHandler");
 // send notification to users
 exports.sendNotification = catchAsyncErrors(async (req, res, next) => {
   const { title, message } = req.body;
+  console.log(title, message);
   const users = await User.find({});
   if (!users) {
     return next(new ErrorHandler("user not found", 404));
