@@ -51,6 +51,7 @@ const corsOptions = {
     "http://localhost:5173",
     "http://167.71.218.23",
     "https://167.71.218.23",
+    "http://dev.e-pic.co/",
   ],
   methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
   credentials: true,
