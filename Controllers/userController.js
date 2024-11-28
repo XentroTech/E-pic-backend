@@ -8,7 +8,7 @@ const processPayment = require("../utils/processPayment.js");
 const crypto = require("crypto");
 const { validationResult } = require("express-validator");
 const Image = require("../Models/imageModel.js");
-const BASE_URL = "http://localhost:300";
+const BASE_URL = "http://dev.e-pic.co/";
 
 //register
 exports.register = catchAsyncErrors(async (req, res, next) => {
@@ -534,7 +534,6 @@ exports.getPurchasedImages = catchAsyncErrors(async (req, res, next) => {
 });
 
 // user referral bonus details
-
 exports.getReferralBonusDetails = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findById(req.user._id);
 

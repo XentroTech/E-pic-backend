@@ -24,7 +24,7 @@ exports.createContactMessage = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.getUserMessages = catchAsyncErrors(async (req, res, next) => {
-  const messages = await Contact.find({});
+  const messages = await Contact.find({}).sort({ date: -1 });
   if (!messages) {
     return next(new ErrorHandler("Messages not found", 404));
   }
@@ -32,4 +32,21 @@ exports.getUserMessages = catchAsyncErrors(async (req, res, next) => {
     success: true,
     messages,
   });
+});
+exports.deleteUserMessages = catchAsyncErrors(async (req, res, next) => {
+  const { userId } = req.params.id;
+  const message = await Contact.findById(userId);
+  if (!message) {
+    return next(new ErrorHandler("Messages not found", 404));
+  }
+
+  await message.deleteOne();
+  res.status(200).json({
+    success: true,
+    message: "Message has been deleted",
+  });
+});
+
+exports.isReadMessage = catchAsyncErrors(async (req, res, next) => {
+  const message = await Contact;
 });

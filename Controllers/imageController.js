@@ -4,7 +4,7 @@ const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const ErrorHandler = require("../utils/errorHandler");
 const processPayment = require("../utils/processPayment");
 const path = require("path");
-const BASE_URL = "http://localhost:3000/";
+const BASE_URL = "http://dev.e-pic.co/";
 
 //upload photo
 exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {

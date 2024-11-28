@@ -185,7 +185,7 @@ exports.getWeeklyTargetGraph = catchAsyncErrors(async (req, res, next) => {
       $sort: { "_id.year": -1, "_id.week": -1 },
     },
   ]);
-
+  // console.log(salesData[0].weeklySale);
   const targets = [];
   const targetAchievedPercentages = [];
   // Random initial target (5-10)
@@ -202,9 +202,10 @@ exports.getWeeklyTargetGraph = catchAsyncErrors(async (req, res, next) => {
           start &&
         new Date(weekData._id.year, 0, 1 + (weekData._id.week - 1) * 7) <= end
     );
-
     const salesCount = weeklySale ? weeklySale.weeklySales : 0;
-
+    // const salesCount = salesData[0].weeklySale;
+    // console.log(salesCount);
+    // console.log(salesData[0].weeklySale);
     // Assign target for the current week
     let target;
     if (i === 0) {
