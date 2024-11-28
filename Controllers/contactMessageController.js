@@ -1,5 +1,5 @@
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
-const Contact = require("../Models/contactModel");
+const ContactMessage = require("../Models/contactMessageModel");
 const ErrorHandler = require("../utils/errorHandler");
 
 exports.createContactMessage = catchAsyncErrors(async (req, res, next) => {
@@ -9,7 +9,7 @@ exports.createContactMessage = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Please Provide all information"));
   }
 
-  const newMessage = await Contact.create({
+  const newMessage = await ContactMessage.create({
     user: req.user._id,
     name,
     email,
@@ -24,7 +24,7 @@ exports.createContactMessage = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.getUserMessages = catchAsyncErrors(async (req, res, next) => {
-  const messages = await Contact.find({}).sort({ date: -1 });
+  const messages = await ContactMessage.find({}).sort({ date: -1 });
   if (!messages) {
     return next(new ErrorHandler("Messages not found", 404));
   }
@@ -35,7 +35,7 @@ exports.getUserMessages = catchAsyncErrors(async (req, res, next) => {
 });
 exports.deleteUserMessages = catchAsyncErrors(async (req, res, next) => {
   const { userId } = req.params.id;
-  const message = await Contact.findById(userId);
+  const message = await ContactMessage.findById(userId);
   if (!message) {
     return next(new ErrorHandler("Messages not found", 404));
   }
@@ -48,5 +48,14 @@ exports.deleteUserMessages = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.isReadMessage = catchAsyncErrors(async (req, res, next) => {
-  const message = await Contact;
+  const { id } = req.params.id;
+  const message = await ContactMessage.findById(id);
+  if (!message) {
+    return next(new ErrorHandler("message not found", 404));
+  }
+  message.isRead = true;
+  res.status(200).json({
+    success: true,
+    message: "message has been seen",
+  });
 });

@@ -79,10 +79,11 @@ exports.getForYouImages = catchAsyncErrors(async (req, res, next) => {
     // Fetch images from those categories, excluding the user's own liked images
     images = await Image.find({
       category: { $in: categories },
-      _id: { $nin: user.liked_images }, // Exclude already liked images
+      // Exclude already liked images
+      _id: { $nin: user.liked_images },
     })
       .populate("owner", "name profile_pic")
-      .limit(20); // Limit to a reasonable number
+      .limit(20);
   } else {
     // User has not liked any images, fetch random images
     images = await Image.aggregate([{ $sample: { size: 20 } }]);
