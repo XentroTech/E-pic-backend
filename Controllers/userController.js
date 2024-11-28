@@ -27,6 +27,7 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
   //set referral bonus
   if (referralCode) {
     const referredUser = await User.findOne({ username: referralCode });
+    console.log(referredUser);
     if (referredUser) {
       if (referredUser.referred_users_details.length <= 3) {
         referredUser.wallet += 10;
@@ -545,8 +546,6 @@ exports.getPurchasedImages = catchAsyncErrors(async (req, res, next) => {
 // user referral bonus details
 exports.getReferralBonusDetails = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findById(req.user._id);
-  console.log(user);
-  console.log("entered into the function");
   const referralBonus = await User.aggregate([
     { $match: { _id: user._id } },
     { $unwind: "$referred_users_details" },
@@ -555,15 +554,15 @@ exports.getReferralBonusDetails = catchAsyncErrors(async (req, res, next) => {
         from: "users",
         localField: "referred_users_details.user_email",
         foreignField: "email",
-        as: "referred_user_details",
+        as: "user_details",
       },
     },
     {
       $project: {
-        // "referred_users_details.referralBonus",
         referredUsers: {
-          $arrayElement: ["$referred_user_details", 0],
+          $arrayElemAt: ["$user_details", 0],
         },
+        referralBonus: "$referred_users_details.referralBonus",
       },
     },
     {
@@ -571,10 +570,8 @@ exports.getReferralBonusDetails = catchAsyncErrors(async (req, res, next) => {
         _id: "$_id",
         count: { $sum: 1 },
         totalEarnings: { $sum: "$referred_users_details.referralBonus" },
-        referredUser: {
-          $push: {
-            profile_pic: "$refereedUsers.profile_pic",
-          },
+        referredUsers: {
+          $push: { profile_pic: "$user_details.profile_pic" },
         },
       },
     },
@@ -585,4 +582,3 @@ exports.getReferralBonusDetails = catchAsyncErrors(async (req, res, next) => {
     referralBonus,
   });
 });
-//

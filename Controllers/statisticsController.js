@@ -95,7 +95,8 @@ exports.getChartData = catchAsyncErrors(async (req, res, next) => {
   }
 });
 
-//get sold images
+// get sold images
+
 exports.getSoldImages = catchAsyncErrors(async (req, res, next) => {
   const userId = req.user._id;
 
@@ -104,16 +105,33 @@ exports.getSoldImages = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("User not found", 404));
   }
 
-  // fetching images by filtering as sold_count
+  // fetching images by filtering as sold_count and populating owner
   const soldImages = await Image.aggregate([
-    { $match: { sold_count: { $gte: 1 } } },
-    { $sort: { sold_count: -1 } },
+    {
+      $match: {
+        owner: req.user._id,
+        sold_count: { $gte: 1 },
+      },
+    },
+    {
+      $sort: { sold_count: -1 },
+    },
+
+    // Project the required fields for the owner and image
+    {
+      $project: {
+        title: 1,
+        image_url: 1,
+        sold_count: 1,
+        uploaded_at: 1,
+      },
+    },
   ]);
 
-  // if nod get sold images
-  if (!soldImages) {
+  // if no sold images found
+  if (!soldImages || soldImages.length === 0) {
     return next(
-      new ErrorHandler("image not found or image has not been sold yet", 400)
+      new ErrorHandler("Image not found or image has not been sold yet", 400)
     );
   }
 
