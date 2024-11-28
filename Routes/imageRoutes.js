@@ -14,6 +14,7 @@ const {
   approveImage,
   getPendingImages,
   getLiveImages,
+  getSoldImages,
 } = require("../Controllers/imageController");
 const { isAuthenticated } = require("../middlewares/Auth");
 
@@ -32,6 +33,8 @@ router.get("/image/mostLiked", getMostLikedImages);
 router.get("/image/:id", isAuthenticated, getAnImage);
 // approve image
 router.patch("/image/approveImage/:id", isAuthenticated, approveImage);
+// get sold images
+router.get("/soldImages", isAuthenticated, getSoldImages);
 //upload new image
 router.post(
   "/image/upload",
@@ -47,7 +50,6 @@ router.delete("/image/delete/:id", isAuthenticated, deleteImage);
 router.post("/image/like/:id", isAuthenticated, likeImage);
 //purchase image
 router.post("/image/purchase", isAuthenticated, purchaseImage);
-
 //purchase space
 // router.post("/purchaseSpace", isAuthenticated, purchaseSpace);
 

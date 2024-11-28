@@ -549,11 +549,33 @@ exports.getReferralBonusDetails = catchAsyncErrors(async (req, res, next) => {
   console.log("entered into the function");
   const referralBonus = await User.aggregate([
     { $match: { _id: user._id } },
+    { $unwind: "$referred_users_details" },
+    {
+      $lookup: {
+        from: "users",
+        localField: "referred_users_details.user_email",
+        foreignField: "email",
+        as: "referred_user_details",
+      },
+    },
+    {
+      $project: {
+        // "referred_users_details.referralBonus",
+        referredUsers: {
+          $arrayElement: ["$referred_user_details", 0],
+        },
+      },
+    },
     {
       $group: {
-        _id: null,
+        _id: "$_id",
         count: { $sum: 1 },
         totalEarnings: { $sum: "$referred_users_details.referralBonus" },
+        referredUser: {
+          $push: {
+            profile_pic: "$refereedUsers.profile_pic",
+          },
+        },
       },
     },
   ]);
@@ -563,3 +585,4 @@ exports.getReferralBonusDetails = catchAsyncErrors(async (req, res, next) => {
     referralBonus,
   });
 });
+//

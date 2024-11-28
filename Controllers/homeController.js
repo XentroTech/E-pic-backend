@@ -386,16 +386,117 @@ exports.getChartData = catchAsyncErrors(async (req, res, next) => {
   try {
     const chartData = await Image.aggregate([
       { $unwind: "$sold_details" },
+
       matchStage,
       groupStage,
     ]);
 
+    const totalSold = chardData[0]?.count || 0;
+    const totalEarning = chardData[0]?.totalEarnings || [];
     res.status(200).send({
       success: true,
       interval,
       chartData,
+      totalSold,
     });
   } catch (error) {
     return next(new ErrorHandler("Failed to fetch chart data", 500));
   }
+});
+
+//weekly target graph
+exports.getWeeklyTargetGraph = catchAsyncErrors(async (req, res, next) => {
+  const userId = req.user._id;
+
+  if (!userId) {
+    return next(new ErrorHandler("User ID is required", 400));
+  }
+
+  const today = new Date();
+  const startOfWeek = (date, weeksAgo) => {
+    const result = new Date(date);
+    result.setDate(result.getDate() - result.getDay() - weeksAgo * 7);
+    result.setHours(0, 0, 0, 0);
+    return result;
+  };
+
+  const endOfWeek = (date, weeksAgo) => {
+    const result = new Date(startOfWeek(date, weeksAgo));
+    result.setDate(result.getDate() + 6);
+    result.setHours(23, 59, 59, 999);
+    return result;
+  };
+
+  // Fetch sales data for the past 4 weeks
+  const salesData = await Image.aggregate([
+    { $unwind: "$sold_details" },
+    { $match: { "sold_details.date": { $exists: true }, owner: userId } },
+    {
+      $group: {
+        _id: {
+          week: { $isoWeek: "$sold_details.date" },
+          year: { $isoYear: "$sold_details.date" },
+        },
+        weeklySales: { $sum: 1 }, // Count of sales
+      },
+    },
+    {
+      $sort: { "_id.year": -1, "_id.week": -1 },
+    },
+  ]);
+
+  const targets = [];
+  const targetAchievedPercentages = [];
+  // Random initial target (5-10)
+  let randomTarget = Math.floor(Math.random() * (10 - 5 + 1)) + 5;
+  let averageTargetAchievement = 0;
+
+  for (let i = 0; i < 4; i++) {
+    const start = startOfWeek(today, i);
+    const end = endOfWeek(today, i);
+
+    const weeklySale = salesData.find(
+      (weekData) =>
+        new Date(weekData._id.year, 0, 1 + (weekData._id.week - 1) * 7) >=
+          start &&
+        new Date(weekData._id.year, 0, 1 + (weekData._id.week - 1) * 7) <= end
+    );
+
+    const salesCount = weeklySale ? weeklySale.weeklySales : 0;
+
+    // Assign target for the current week
+    let target;
+    if (i === 0) {
+      target = randomTarget; // First week's target is random
+    } else {
+      const lastWeekSales =
+        targets[i - 1] < salesCount ? salesCount : targets[i - 1];
+      // Increment by 10% of last week's actual sales or target
+      target = Math.ceil(lastWeekSales * 1.1);
+    }
+
+    targets.unshift(target);
+
+    // Calculate percentage of target fulfilled
+    const percentage =
+      salesCount > 0 ? Math.min((salesCount / target) * 100, 100) : 0;
+    targetAchievedPercentages.unshift(percentage);
+
+    // Update average target achievement
+    averageTargetAchievement += percentage;
+  }
+
+  // Calculate final average target fulfillment
+  averageTargetAchievement /= 4;
+
+  res.status(200).send({
+    success: true,
+    graphData: {
+      weeks: ["Week 1", "Week 2", "Week 3", "Week 4"],
+      targets,
+      sales: salesData.slice(0, 4).map((data) => data.weeklySales || 0),
+      targetAchievedPercentages,
+    },
+    averageTargetAchievement: averageTargetAchievement.toFixed(2),
+  });
 });

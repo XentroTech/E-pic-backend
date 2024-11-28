@@ -432,3 +432,28 @@ exports.getUserMarketPlaceImages = catchAsyncErrors(async (req, res, next) => {
     images,
   });
 });
+
+//get sold images
+exports.getSoldImages = catchAsyncErrors(async (req, res, next) => {
+  const userId = req.user._id;
+
+  if (!userId) {
+    return next(new ErrorHandler("User not found", 404));
+  }
+
+  const soldImages = await Image.aggregate([
+    { $match: { sold_count: { $gte: 1 } } },
+    { $sort: { sold_count: -1 } },
+  ]);
+
+  if (!soldImages) {
+    return next(
+      new ErrorHandler("image not found or image has not been sold yet", 400)
+    );
+  }
+
+  res.status(200).json({
+    success: true,
+    soldImages,
+  });
+});
