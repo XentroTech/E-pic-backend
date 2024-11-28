@@ -29,7 +29,7 @@ router.get(
 );
 router.get("/followed", isAuthenticated, getImagesOfFollowedUser);
 router.get("/search", isAuthenticated, search);
-router.get("/chart/data", isAuthenticated, getChartData);
+
 //admin
 router.post(
   "/image/featured/:imageId",

@@ -15,6 +15,7 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
   const { name, username, email, password, mobileNo, referralCode, country } =
     req.body;
 
+  // Validate request body
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return next(new ErrorHandler(errors.array()[0].msg, 400));
@@ -24,66 +25,55 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Please provide all information", 401));
   }
 
-  //set referral bonus
+  let referredUser = null;
+
+  // Set referral bonus
   if (referralCode) {
-    const referredUser = await User.findOne({ username: referralCode });
-    console.log(referredUser);
+    referredUser = await User.findOne({ username: referralCode });
     if (referredUser) {
-      if (referredUser.referred_users_details.length <= 3) {
-        referredUser.wallet += 10;
-        referredUser.referred_users_details.push({
-          user_email: email,
-          referralBonus: 10,
-        });
-        await referredUser.save();
-      } else if (referredUser.referred_users_details.length <= 7) {
-        referredUser.wallet += 20;
-        referredUser.referred_users_details.push({
-          user_email: email,
-          referralBonus: 20,
-        });
-        await referredUser.save();
-      } else if (referredUser.referred_users_details.length <= 10) {
-        referredUser.wallet += 30;
-        referredUser.referred_users_details.push({
-          user_email: email,
-          referralBonus: 30,
-        });
-        await referredUser.save();
-      } else if (referredUser.referred_users_details.length > 10) {
-        referredUser.wallet += 5;
-        referredUser.referred_users_details.push({
-          user_email: email,
-          referralBonus: 5,
-        });
-        await referredUser.save();
-      }
+      const referralBonus =
+        referredUser.referred_users_details.length < 3
+          ? 10
+          : referredUser.referred_users_details.length < 7
+          ? 20
+          : referredUser.referred_users_details.length < 10
+          ? 30
+          : 5;
+
+      referredUser.wallet += referralBonus;
+      referredUser.referred_users_details.push({
+        user_email: email,
+        referralBonus,
+      });
+      await referredUser.save();
     } else {
       return next(
         new ErrorHandler(
-          "Your referral id is not valid, if you don't have referral id then skip",
+          "Your referral id is not valid. If you don't have a referral id, you can skip this step.",
           404
         )
       );
     }
   }
 
+  // Create the new user
   const newUser = await User.create({
-    name: name,
-    username: username,
-    email: email,
-    password: password,
-    mobileNo: mobileNo,
-    referralCode: referralCode,
-    country: country,
+    name,
+    username,
+    email,
+    password,
+    mobileNo,
+    referralCode,
+    country,
+    wallet: referralCode ? 5 : 0,
   });
 
-  if (newUser.referralCode != "") {
-    newUser.wallet += 5;
+  // If referred, add the new user to referredUser's list
+  if (referredUser) {
+    referredUser.referredUsers = referredUser.referredUsers || [];
     referredUser.referredUsers.push(newUser._id);
+    await referredUser.save();
   }
-
-  await newUser.save();
 
   res.status(200).send({ success: true, newUser });
 });
@@ -544,41 +534,60 @@ exports.getPurchasedImages = catchAsyncErrors(async (req, res, next) => {
 });
 
 // user referral bonus details
+
 exports.getReferralBonusDetails = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findById(req.user._id);
-  const referralBonus = await User.aggregate([
-    { $match: { _id: user._id } },
-    { $unwind: "$referred_users_details" },
-    {
-      $lookup: {
-        from: "users",
-        localField: "referred_users_details.user_email",
-        foreignField: "email",
-        as: "user_details",
-      },
-    },
-    {
-      $project: {
-        referredUsers: {
-          $arrayElemAt: ["$user_details", 0],
-        },
-        referralBonus: "$referred_users_details.referralBonus",
-      },
-    },
-    {
-      $group: {
-        _id: "$_id",
-        count: { $sum: 1 },
-        totalEarnings: { $sum: "$referred_users_details.referralBonus" },
-        referredUsers: {
-          $push: { profile_pic: "$user_details.profile_pic" },
-        },
-      },
-    },
-  ]);
 
-  res.status(200).send({
-    success: true,
-    referralBonus,
-  });
+  if (!user) {
+    return next(new ErrorHandler("User not found", 404));
+  }
+
+  try {
+    const referralBonus = await User.aggregate([
+      { $match: { _id: user._id } },
+      {
+        $unwind: {
+          path: "$referred_users_details",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "referred_users_details.user_email",
+          foreignField: "email",
+          as: "user_details",
+        },
+      },
+      {
+        $project: {
+          referralBonus: "$referred_users_details.referralBonus",
+          referredUser: { $arrayElemAt: ["$user_details", 0] },
+        },
+      },
+      {
+        $group: {
+          _id: "$_id",
+          count: { $sum: 1 },
+          totalEarnings: { $sum: "$referralBonus" },
+          referredUsers: {
+            $push: {
+              profile_pic: "$referredUser.profile_pic",
+              name: "$referredUser.name",
+            },
+          },
+        },
+      },
+    ]);
+
+    res.status(200).send({
+      success: true,
+      referralBonus,
+    });
+  } catch (error) {
+    console.error("Aggregation Error:", error);
+    return next(
+      new ErrorHandler("Failed to fetch referral bonus details", 500)
+    );
+  }
 });

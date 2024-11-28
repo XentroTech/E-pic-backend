@@ -96,7 +96,6 @@ exports.getChartData = catchAsyncErrors(async (req, res, next) => {
 });
 
 // get sold images
-
 exports.getSoldImages = catchAsyncErrors(async (req, res, next) => {
   const userId = req.user._id;
 
