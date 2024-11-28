@@ -19,7 +19,15 @@ const prizeSchema = new Schema({
     type: String,
     required: true,
   },
+  position: {
+    type: String,
+    required: true,
+  },
   value: {
+    type: Number,
+    required: true,
+  },
+  price: {
     type: Number,
     required: true,
   },

@@ -25,6 +25,8 @@ const gameResult = require("./Routes/gameResultRoutes");
 const competition = require("./Routes/competitionRoutes");
 const game = require("./Routes/gameRoutes");
 const appNotification = require("./Routes/appNotificationRoutes");
+const contactMessage = require("./Routes/contactRoutes");
+const statistics = require("./Routes/statisticsRoutes");
 // const swaggerUi = require("swagger-ui-express");
 // const swaggerDocs = require("./swagger");
 
@@ -49,6 +51,7 @@ const corsOptions = {
     "http://localhost:5173",
     "http://167.71.218.23",
     "https://167.71.218.23",
+    "http://dev.e-pic.co/",
   ],
   methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
   credentials: true,
@@ -84,6 +87,8 @@ app.use("/api/v1/", gameResult);
 app.use("/api/v1/", game);
 app.use("/api/v1/", competition);
 app.use("/api/v1/", appNotification);
+app.use("/api/v1/", contactMessage);
+app.use("/api/v1/", statistics);
 
 // Error middleware
 app.use(errorMiddleware);

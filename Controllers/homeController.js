@@ -2,6 +2,7 @@ const Image = require("../Models/imageModel");
 const User = require("../Models/userModel");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const ErrorHandler = require("../utils/errorHandler");
+const mongoose = require("mongoose");
 
 //get Top sellers
 exports.getTopSellers = catchAsyncErrors(async (req, res, next) => {

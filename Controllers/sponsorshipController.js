@@ -2,7 +2,7 @@
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const Sponsorship = require("../Models/sponsorshipModel");
 
-const BASE_URL = "http://localhost:3000/";
+const BASE_URL = "http://dev.e-pic.co/";
 // create sponsor
 exports.createSponsorship = catchAsyncErrors(async (req, res) => {
   const { brandName, adLocation, startDate, endDate } = req.body;

@@ -10,23 +10,26 @@ const {
   getImagesAsCategory,
   getImagesOfFollowedUser,
   search,
+  getChartData,
+  getNewlyAddedImages,
 } = require("../Controllers/homeController");
 
 const router = express.Router();
 
-router.get("/user/topSeller", isAuthenticated, getTopSellers);
-router.get("/image/bestSelling", isAuthenticated, getBestSellingImages);
-router.get("/image/weeklyTop", isAuthenticated, getWeeklyTopSellingImages);
-router.get("/image/forYou", isAuthenticated, getForYouImages);
-router.get("/image/new", isAuthenticated, getForYouImages);
-router.get("/image/featured", isAuthenticated, getFeaturedImages);
+router.get("/topSeller", isAuthenticated, getTopSellers);
+router.get("/bestSelling", isAuthenticated, getBestSellingImages);
+router.get("/weeklyTop", isAuthenticated, getWeeklyTopSellingImages);
+router.get("/forYou", isAuthenticated, getForYouImages);
+router.get("/newlyAdded", isAuthenticated, getNewlyAddedImages);
+router.get("/featured", isAuthenticated, getFeaturedImages);
 router.get(
   "image/category/:categoryName",
   isAuthenticated,
   getImagesAsCategory
 );
-router.get("/image/followed", isAuthenticated, getImagesOfFollowedUser);
+router.get("/followed", isAuthenticated, getImagesOfFollowedUser);
 router.get("/search", isAuthenticated, search);
+
 //admin
 router.post(
   "/image/featured/:imageId",

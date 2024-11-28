@@ -4,7 +4,7 @@ const Competition = require("../Models/competitionModel");
 const Image = require("../Models/imageModel");
 const ErrorHandler = require("../utils/errorHandler");
 
-const BASE_URL = "http://localhost:3000/";
+const BASE_URL = "http://dev.e-pic.co/";
 
 exports.createEntry = catchAsyncErrors(async (req, res, next) => {
   const {

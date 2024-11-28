@@ -12,4 +12,5 @@ const sponsorshipSchema = new mongoose.Schema({
   endDate: { type: Date, required: true },
 });
 
-module.exports = mongoose.model("Sponsorship", sponsorshipSchema);
+const Sponsor = mongoose.model("Sponsorship", sponsorshipSchema);
+module.exports = Sponsor;

@@ -6,10 +6,10 @@ const GameLeaderBoard = require("../Models/gameLeaderBoardModel");
 const Competition = require("../Models/competitionModel");
 const AppNotification = require("../Models/appNotificationModel");
 //create prize info
-const BASE_URL = "http://localhost:3000/";
+const BASE_URL = "http://dev.e-pic.co/";
 
 exports.createPrizeInfo = catchAsyncErrors(async (req, res, next) => {
-  let { type, name, rank, value, image_url } = req.body;
+  let { type, name, rank, value, image_url, position, price } = req.body;
   console.log(req.body);
 
   try {
@@ -19,7 +19,15 @@ exports.createPrizeInfo = catchAsyncErrors(async (req, res, next) => {
     }
 
     // Ensure required fields are not empty
-    if (!type || !name || !rank || !value || !image_url) {
+    if (
+      !type ||
+      !name ||
+      !rank ||
+      !value ||
+      !image_url ||
+      !position ||
+      !price
+    ) {
       return res.status(400).json({
         success: false,
         message: "Title, position, and image URL are required.",
@@ -33,6 +41,8 @@ exports.createPrizeInfo = catchAsyncErrors(async (req, res, next) => {
       rank,
       image_url,
       value,
+      position,
+      price,
     });
 
     await prizeInfo.save();
@@ -217,7 +227,7 @@ exports.distributePrizes = catchAsyncErrors(async (req, res, next) => {
   }
 
   // Fetch prizes for the day
-  const prizes = await Prize.find({ date: date }).sort({ rank: 1 });
+  const prizes = await Prize.find().sort({ rank: 1 });
   console.log("prize:", prizes);
   if (!prizes || prizes.length === 0) {
     return next(new ErrorHandler("Prizes not set for the given date.", 404));

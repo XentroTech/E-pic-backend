@@ -4,7 +4,7 @@ const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const ErrorHandler = require("../utils/errorHandler");
 const processPayment = require("../utils/processPayment");
 const path = require("path");
-const BASE_URL = "http://localhost:3000/";
+const BASE_URL = "http://dev.e-pic.co/";
 
 //upload photo
 exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
@@ -359,7 +359,7 @@ exports.likeImage = catchAsyncErrors(async (req, res, next) => {
     message: alreadyLiked ? "unlike the image" : "liked the image",
   });
 });
-
+//purchase image
 exports.purchaseImage = catchAsyncErrors(async (req, res, next) => {
   const { userId, imageId, price } = req.body;
   const user = await User.findById(userId);
@@ -397,6 +397,11 @@ exports.purchaseImage = catchAsyncErrors(async (req, res, next) => {
   // Update image and user data
   image.sold_count += 1;
   image.owner.total_sales += price;
+  image.sold_details.push({
+    buyer: user._id,
+    date: Date.now(),
+    price: price,
+  });
   image.bought_by.push(user._id);
   user.purchased_images.push({ image: image._id });
 

@@ -2,7 +2,7 @@
 const axios = require("axios");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 
-const sendNotification = catchAsyncErrors(async (user, title, body) => {
+exports.sendNotification = catchAsyncErrors(async (user, title, body) => {
   const fcmToken = user.fcmToken;
 
   const message = {
