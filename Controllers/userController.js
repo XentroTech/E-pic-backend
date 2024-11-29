@@ -582,7 +582,6 @@ exports.getReferralBonusDetails = catchAsyncErrors(async (req, res, next) => {
     const referredUsers = referralBonus[0]?.referredUsers || 0;
     res.status(200).send({
       success: true,
-      referralBonus,
       totalEarnings,
       referredUsers,
     });

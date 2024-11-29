@@ -49,11 +49,13 @@ exports.deleteUserMessages = catchAsyncErrors(async (req, res, next) => {
 
 exports.isReadMessage = catchAsyncErrors(async (req, res, next) => {
   const { id } = req.params.id;
+  console.log("entered into the function", id);
   const message = await ContactMessage.findById(id);
   if (!message) {
     return next(new ErrorHandler("message not found", 404));
   }
   message.isRead = true;
+  await message.save();
   res.status(200).json({
     success: true,
     message: "message has been seen",
