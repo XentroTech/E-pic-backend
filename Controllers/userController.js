@@ -578,10 +578,12 @@ exports.getReferralBonusDetails = catchAsyncErrors(async (req, res, next) => {
         },
       },
     ]);
-
+    const totalEarnings = referralBonus[0]?.totalEarnings || 0;
+    const referredUsers = referralBonus[0]?.referredUsers || 0;
     res.status(200).send({
       success: true,
-      referralBonus,
+      totalEarnings,
+      referredUsers,
     });
   } catch (error) {
     console.error("Aggregation Error:", error);
