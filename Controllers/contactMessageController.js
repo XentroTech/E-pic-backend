@@ -48,8 +48,7 @@ exports.deleteUserMessages = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.isReadMessage = catchAsyncErrors(async (req, res, next) => {
-  const { id } = req.params.id;
-  console.log("entered into the function", id);
+  const { id } = req.params;
   const message = await ContactMessage.findById(id);
   if (!message) {
     return next(new ErrorHandler("message not found", 404));

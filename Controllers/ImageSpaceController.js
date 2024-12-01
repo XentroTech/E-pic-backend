@@ -70,15 +70,21 @@ exports.deleteImageSpacesInfo = catchAsyncErrors(async (req, res, next) => {
 
 // purchase spaces
 exports.purchaseSpace = catchAsyncErrors(async (req, res, next) => {
-  const { paymentDetails } = req.body;
+  const { space, price } = req.body;
 
-  const space = req.params;
   const user = await User.findById(req.user._id);
+
+  if (!space || !price) {
+    return next(new ErrorHandler("Please input space and price info"));
+  }
   if (!user) {
     return next(new ErrorHandler("User not found", 404));
   }
-  const paymentSuccess = true; //processPayment(paymentDetails);
-  if (paymentSuccess) {
+  if (price < user.wallet) {
+    return next(new ErrorHandler("Insufficient Coin please buy coin", 400));
+  }
+  if (price) {
+    user.wallet -= price;
     user.image_limit += space;
     await user.save();
     res.status(200).json({
@@ -87,6 +93,6 @@ exports.purchaseSpace = catchAsyncErrors(async (req, res, next) => {
       message: `Successfully purchased ${newSpace} spaces`,
     });
   } else {
-    return next(new ErrorHandler("payment not successful", 401));
+    return next(new ErrorHandler("purchase not successful", 401));
   }
 });
