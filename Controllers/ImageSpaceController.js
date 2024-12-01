@@ -80,7 +80,7 @@ exports.purchaseSpace = catchAsyncErrors(async (req, res, next) => {
   if (!user) {
     return next(new ErrorHandler("User not found", 404));
   }
-  if (price < user.wallet) {
+  if (price > user.wallet) {
     return next(new ErrorHandler("Insufficient Coin please buy coin", 400));
   }
   if (price) {
@@ -90,7 +90,7 @@ exports.purchaseSpace = catchAsyncErrors(async (req, res, next) => {
     res.status(200).json({
       success: true,
       statusCode: 200,
-      message: `Successfully purchased ${newSpace} spaces`,
+      message: `Congratulations! Successfully purchased ${space} spaces`,
     });
   } else {
     return next(new ErrorHandler("purchase not successful", 401));
