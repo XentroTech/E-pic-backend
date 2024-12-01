@@ -11,7 +11,7 @@ const errorMiddleware = require("./utils/error");
 const path = require("path");
 const uploadPath = path.join(__dirname, "uploads");
 const admin = require("firebase-admin");
-const serviceAccount = require("./firebase-service-account.json");
+// const serviceAccount = require("./firebase-service-account.json");
 const imageSpaceRoute = require("./Routes/imageSpaceRoutes");
 const coinRoutes = require("./Routes/coinRoutes");
 const prizeRoutes = require("./Routes/prizeRoutes");
@@ -38,9 +38,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // initialize firebase admin
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
+// admin.initializeApp({
+//   credential: admin.credential.cert(serviceAccount),
+// });
 
 app.use(express.json());
 app.use("/uploads", express.static(uploadPath));
