@@ -40,6 +40,7 @@ exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
     camera_model,
     camera_lens,
     captured_date,
+    country = "BD",
   } = req.body;
 
   // Store all uploaded files in the database
@@ -56,6 +57,7 @@ exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
         camera_model,
         camera_lens,
         captured_date,
+        country: req.user.country,
       });
 
       user.uploaded_images.push(newImage._id);

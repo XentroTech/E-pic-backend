@@ -6,8 +6,19 @@ const User = require("../Models/userModel");
 //create coin info
 
 exports.createCoinInfo = catchAsyncErrors(async (req, res, next) => {
-  const { coin, price, image_url, extraCoins, promoExpiration } = req.body;
+  const { coin, price, image_url, extraCoins, promoExpiration, country } =
+    req.body;
 
+  if (
+    !coin ||
+    !price ||
+    !image_url ||
+    !extraCoins ||
+    !promoExpiration ||
+    !country
+  ) {
+    return next(new ErrorHandler("Please provide all information", 400));
+  }
   const promoActive = promoExpiration ? true : false;
 
   const coinInfo = await Coin({
@@ -17,6 +28,7 @@ exports.createCoinInfo = catchAsyncErrors(async (req, res, next) => {
     extraCoins: extraCoins || 0,
     promoExpiration,
     promoActive,
+    country: req.user.country,
   });
 
   await coinInfo.save();

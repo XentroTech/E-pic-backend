@@ -17,6 +17,7 @@ const imageSchema = new mongoose.Schema(
         price: { type: Number, required: true },
       },
     ],
+    country: { type: String, required: true },
     camera: { type: String },
     camera_model: { type: String },
     camera_lens: { type: String, default: "" },

@@ -8,6 +8,7 @@ const CoinSchema = new Schema({
   extraCoins: { type: Number, default: 0 },
   promoExpiration: { type: Date },
   promoActive: { type: Boolean, default: false },
+  country: { type: String, required: true },
 });
 
 const Coin = mongoose.model("Coin", CoinSchema);

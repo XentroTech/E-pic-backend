@@ -5,12 +5,16 @@ const User = require("../Models/userModel");
 
 //create image space info
 exports.createImageSpaceInfo = catchAsyncErrors(async (req, res, next) => {
-  const { space, price, image_url } = req.body;
-  console.log(space, price, image_url);
+  const { space, price, image_url, country } = req.body;
+
+  if (!space || !price || !image_url || !country) {
+    return next(new ErrorHandler("Please provide all information", 400));
+  }
   const newSpace = await ImageSpace({
     space,
     price,
     image_url,
+    country: req.user.country,
   });
 
   await newSpace.save();
