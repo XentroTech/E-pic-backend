@@ -10,6 +10,7 @@ const BASE_URL = "http://dev.e-pic.co/";
 
 exports.createPrizeInfo = catchAsyncErrors(async (req, res, next) => {
   let { type, name, rank, value, image_url, position, price } = req.body;
+  console.log("entered into the function");
   console.log(req.body);
 
   try {

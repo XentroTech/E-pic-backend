@@ -56,7 +56,7 @@ router.patch(
 router.post("/follow/:id", isAuthenticated, followUser);
 
 //purchase coin
-router.post("/purchaseCoin", isAuthenticated, purchaseCoin);
+// router.post("/purchaseCoin", isAuthenticated, purchaseCoin);
 //referral bonus
 router.get("/referralBonus", isAuthenticated, getReferralBonusDetails);
 

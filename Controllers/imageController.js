@@ -314,12 +314,11 @@ exports.deleteImage = catchAsyncErrors(async (req, res, next) => {
   if (!image) {
     return next(new ErrorHandler("Image not found", 404));
   }
-  const user = await User.findById(req.user._id);
-
+  const user = await User.findById(image.owner);
   if (!user) {
     return next(new ErrorHandler("image owner not found", 404));
   }
-  user.uploaded_images -= 1;
+  user.uploaded_images.pull(image._id);
   user.image_limit += 1;
   await image.deleteOne();
 

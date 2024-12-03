@@ -2,6 +2,7 @@ const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const ImageSpace = require("../Models/imageSpaceInfoModel");
 const ErrorHandler = require("../utils/errorHandler");
 const User = require("../Models/userModel");
+const Transaction = require("../Models/transactionModal");
 
 //create image space info
 exports.createImageSpaceInfo = catchAsyncErrors(async (req, res, next) => {
@@ -91,6 +92,15 @@ exports.purchaseSpace = catchAsyncErrors(async (req, res, next) => {
     user.wallet -= price;
     user.image_limit += space;
     await user.save();
+    const transactionInfo = await Transaction.create({
+      user: req.user._id,
+      type: "purchase",
+      item: "space",
+      amount: space,
+      price: price,
+      country: req.user.country,
+    });
+    await transactionInfo.save();
     res.status(200).json({
       success: true,
       statusCode: 200,

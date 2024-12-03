@@ -113,6 +113,7 @@ exports.getNewlyAddedImages = catchAsyncErrors(async (req, res, next) => {
 
   const images = await Image.find({
     uploaded_at: { $gte: startWeek, $lte: endWeek },
+    isLive: true,
   }).populate("owner", "name profile_pic");
   if (!images) {
     return next(new ErrorHandler("Images not Added this week", 404));
@@ -316,4 +317,6 @@ exports.search = catchAsyncErrors(async (req, res) => {
 });
 
 // ad banner
-exports.createAdBanner = catchAsyncErrors(async (req, res, next) => {});
+exports.getStaticText = catchAsyncErrors(async (req, res, next) => {
+  const text = [""];
+});

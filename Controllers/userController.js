@@ -262,9 +262,14 @@ exports.getUsers = catchAsyncErrors(async (req, res) => {
         { username: { $regex: query, $options: "i" } }, // Case-insensitive search
         { email: { $regex: query, $options: "i" } },
         { mobileNo: { $regex: query } },
+        { role: { $regex: query, $options: "i" } },
       ],
     });
   }
+
+  // if (req.query.role) {
+  //   searchCriteria.push({ role: req.query.role });
+  // }
 
   // Combine search criteria using $and if there are any criteria
   const finalCriteria =
