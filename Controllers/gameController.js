@@ -4,7 +4,6 @@ const ErrorHandler = require("../utils/errorHandler");
 
 exports.createGameTime = catchAsyncErrors(async (req, res, next) => {
   const { gameTime } = req.body;
-  console.log(gameTime);
   const newGameTime = await Game.create({
     gameTime: gameTime,
   });
@@ -38,7 +37,6 @@ exports.updateGameTime = catchAsyncErrors(async (req, res, next) => {
   if (!gameTimes) {
     return next(new ErrorHandler("Game time not found", 404));
   }
-  console.log(req.body.data);
   const updatedGameTime = await Game.findByIdAndUpdate(
     req.params.id,
     req.body.data,

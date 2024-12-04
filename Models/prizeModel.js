@@ -35,6 +35,10 @@ const prizeSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  country: {
+    type: String,
+    required: true,
+  },
 });
 
 const Prize = mongoose.model("Prize", prizeSchema);

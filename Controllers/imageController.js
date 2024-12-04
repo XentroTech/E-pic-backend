@@ -1,3 +1,4 @@
+const AppNotification = require("../Models/appNotificationModel");
 const Image = require("../Models/imageModel");
 const User = require("../Models/userModel");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
@@ -141,6 +142,7 @@ exports.getPendingImages = catchAsyncErrors(async (req, res, next) => {
         { userId: { $regex: query, $options: "i" } },
         { email: { $regex: query, $options: "i" } },
       ],
+      $and: [{ country: req.user.country }],
     };
   }
 
@@ -194,6 +196,7 @@ exports.getLiveImages = catchAsyncErrors(async (req, res, next) => {
         { userId: { $regex: query, $options: "i" } },
         { email: { $regex: query, $options: "i" } },
       ],
+      $and: [{ country: req.user.country }],
     };
   }
 
@@ -254,13 +257,11 @@ exports.getAnImage = catchAsyncErrors(async (req, res, next) => {
 
 // get most liked images
 exports.getMostLikedImages = catchAsyncErrors(async (req, res, next) => {
-  const images = await Image.find({})
+  const images = await Image.find({ country: req.user.country })
 
     .sort({ likesCount: -1 })
     .limit(10)
     .populate("owner", "name profile_pic");
-
-  console.log(images);
 
   res.status(200).json({
     success: true,
@@ -350,6 +351,14 @@ exports.likeImage = catchAsyncErrors(async (req, res, next) => {
     image.likesCount += 1;
     //updating user's liked_images attribute
     user.liked_images.push(image._id);
+    //sending notification
+    const sendNotification = await AppNotification.create({
+      user: image.owner,
+      title: `like notification`,
+      message: `${user.name} liked your image`,
+      country: req.user.country,
+    });
+    await sendNotification.save();
   }
 
   await user.save();

@@ -255,7 +255,6 @@ exports.search = catchAsyncErrors(async (req, res) => {
     // Combine search criteria using $and if there are any criteria
     const finalCriteria =
       searchCriteria.length > 0 ? { $and: searchCriteria } : {};
-    console.log("Final Criteria:", JSON.stringify(finalCriteria, null, 2));
 
     // Get the total count of users matching the search criteria
     const totalUsers = await User.countDocuments(finalCriteria);

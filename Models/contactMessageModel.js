@@ -12,8 +12,7 @@ const contactMessageSchema = new Schema({
   email: {
     type: String,
     required: [true, "Please enter your email"],
-    unique: true,
-    validate: [validator.isEmail, "Please enter valid email"],
+    // validate: [validator.isEmail, "Please enter valid email"],
   },
   message: {
     type: String,
@@ -24,6 +23,7 @@ const contactMessageSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  country: { type: String, required: true },
 });
 
 const ContactMessage = mongoose.model("ContactMessage", contactMessageSchema);

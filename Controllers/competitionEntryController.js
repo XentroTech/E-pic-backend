@@ -20,7 +20,6 @@ exports.createEntry = catchAsyncErrors(async (req, res, next) => {
   const currentCompetition = await Competition.findOne({}).sort({
     endDate: -1,
   });
-  console.log("from competition creation:", currentCompetition);
   let image_url = "";
   if (req.files) {
     if (req.files.image_url) {

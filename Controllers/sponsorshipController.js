@@ -7,15 +7,15 @@ const BASE_URL = "http://dev.e-pic.co/";
 exports.createSponsorship = catchAsyncErrors(async (req, res) => {
   const { brandName, adLocation, startDate, endDate } = req.body;
 
-  let image_url = "";
-  if (req.files && req.files.image_url) {
-    image_url = BASE_URL + req.files.image_url[0].path.replace(/\\/g, "/");
-  }
-  if (!brandName || !adLocation || !image_url || !startDate || !endDate) {
+  if (!brandName || !adLocation || !startDate || !endDate) {
     return res.status(400).json({
       success: false,
       message: "Provide all information.",
     });
+  }
+  let image_url = "";
+  if (req.files && req.files.image_url) {
+    image_url = BASE_URL + req.files.image_url[0].path.replace(/\\/g, "/");
   }
   const sponsorship = new Sponsorship({
     brandName,
@@ -23,6 +23,7 @@ exports.createSponsorship = catchAsyncErrors(async (req, res) => {
     adLocation,
     startDate,
     endDate,
+    country: req.user.country,
   });
 
   await sponsorship.save();
