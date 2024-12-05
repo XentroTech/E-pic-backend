@@ -354,8 +354,8 @@ exports.likeImage = catchAsyncErrors(async (req, res, next) => {
     //sending notification
     const sendNotification = await AppNotification.create({
       user: image.owner,
-      title: `like notification`,
-      message: `${user.name} liked your image`,
+      title: `${user.name}`,
+      message: ` liked your image`,
       country: req.user.country,
     });
     await sendNotification.save();

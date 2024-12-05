@@ -30,6 +30,8 @@ const statistics = require("./Routes/statisticsRoutes");
 const dashboardStatistics = require("./Routes/dashboardRoutes");
 const transaction = require("./Routes/transactionRoutes");
 const conConversion = require("./Routes/coinConversionRoutes");
+const searchbarTitle = require("./Routes/searchbarTitleRoutes");
+
 // const swaggerUi = require("swagger-ui-express");
 // const swaggerDocs = require("./swagger");
 
@@ -95,6 +97,7 @@ app.use("/api/v1/", statistics);
 app.use("/api/v1/", dashboardStatistics);
 app.use("/api/v1/", transaction);
 app.use("/api/v1/", conConversion);
+app.use("/api/v1/", searchbarTitle);
 
 // Error middleware
 app.use(errorMiddleware);
