@@ -343,11 +343,16 @@ exports.getAUser = catchAsyncErrors(async (req, res, next) => {
   if (!user) {
     return next(new ErrorHandler("User not found", 404));
   }
-
+  const uploadedImages = user?.uploaded_images;
+  const liveCount = await Image.countDocuments({
+    _id: { $in: uploadedImages },
+    isLive: true,
+  });
   res.status(200).send({
     success: true,
     statusCode: 200,
     user,
+    liveCount,
   });
 });
 
