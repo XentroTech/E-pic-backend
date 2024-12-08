@@ -6,6 +6,7 @@ const gameResultSchema = new Schema({
   imageId: { type: mongoose.Schema.Types.ObjectId, ref: "Image" },
   duration: { type: Number },
   createdAt: { type: Date, default: Date.now() },
+  country: { type: String },
 });
 
 const GameResult = mongoose.model("GameResult", gameResultSchema);

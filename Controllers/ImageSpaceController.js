@@ -2,15 +2,19 @@ const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const ImageSpace = require("../Models/imageSpaceInfoModel");
 const ErrorHandler = require("../utils/errorHandler");
 const User = require("../Models/userModel");
+const Transaction = require("../Models/transactionModal");
 
 //create image space info
 exports.createImageSpaceInfo = catchAsyncErrors(async (req, res, next) => {
-  const { space, price, image_url } = req.body;
-  console.log(space, price, image_url);
+  const { space, price, image_url, country } = req.body;
+
+  if (!space || !price) {
+    return next(new ErrorHandler("Please provide all information", 400));
+  }
   const newSpace = await ImageSpace({
     space,
     price,
-    image_url,
+    country: req.user.country,
   });
 
   await newSpace.save();
@@ -24,7 +28,7 @@ exports.createImageSpaceInfo = catchAsyncErrors(async (req, res, next) => {
 
 // get image space info
 exports.getImageSpacesInfo = catchAsyncErrors(async (req, res, next) => {
-  const imageSpaceInfo = await ImageSpace.find({});
+  const imageSpaceInfo = await ImageSpace.find({ country: req.user.country });
 
   res.status(200).json({
     success: true,
@@ -70,23 +74,38 @@ exports.deleteImageSpacesInfo = catchAsyncErrors(async (req, res, next) => {
 
 // purchase spaces
 exports.purchaseSpace = catchAsyncErrors(async (req, res, next) => {
-  const { paymentDetails } = req.body;
+  const { space, price } = req.body;
 
-  const space = req.params;
   const user = await User.findById(req.user._id);
+
+  if (!space || !price) {
+    return next(new ErrorHandler("Please input space and price info"));
+  }
   if (!user) {
     return next(new ErrorHandler("User not found", 404));
   }
-  const paymentSuccess = true; //processPayment(paymentDetails);
-  if (paymentSuccess) {
+  if (price > user.wallet) {
+    return next(new ErrorHandler("Insufficient Coin please buy coin", 400));
+  }
+  if (price) {
+    user.wallet -= price;
     user.image_limit += space;
     await user.save();
+    const transactionInfo = await Transaction.create({
+      user: req.user._id,
+      type: "purchase",
+      item: "space",
+      amount: space,
+      price: price,
+      country: req.user.country,
+    });
+    await transactionInfo.save();
     res.status(200).json({
       success: true,
       statusCode: 200,
-      message: `Successfully purchased ${newSpace} spaces`,
+      message: `Congratulations! Successfully purchased ${space} spaces`,
     });
   } else {
-    return next(new ErrorHandler("payment not successful", 401));
+    return next(new ErrorHandler("purchase not successful", 401));
   }
 });

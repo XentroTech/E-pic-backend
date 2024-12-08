@@ -28,7 +28,7 @@ exports.createDeleteAccountRequest = catchAsyncErrors(
 
 // get user Delete Request
 exports.getUserDeleteRequest = catchAsyncErrors(async (req, res, next) => {
-  const requests = await DeleteAccount.find({});
+  const requests = await DeleteAccount.find({ country: req.user.country });
   if (!requests) {
     return next(new ErrorHandler("Request Not Found", 404));
   }

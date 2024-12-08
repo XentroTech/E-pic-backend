@@ -14,6 +14,7 @@ exports.createContactMessage = catchAsyncErrors(async (req, res, next) => {
     name,
     email,
     message,
+    country: req.user.country,
   });
 
   res.status(200).json({
@@ -24,7 +25,9 @@ exports.createContactMessage = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.getUserMessages = catchAsyncErrors(async (req, res, next) => {
-  const messages = await ContactMessage.find({}).sort({ date: -1 });
+  const messages = await ContactMessage.find({
+    country: req.user.country,
+  }).sort({ date: -1 });
   if (!messages) {
     return next(new ErrorHandler("Messages not found", 404));
   }
@@ -48,8 +51,7 @@ exports.deleteUserMessages = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.isReadMessage = catchAsyncErrors(async (req, res, next) => {
-  const { id } = req.params.id;
-  console.log("entered into the function", id);
+  const { id } = req.params;
   const message = await ContactMessage.findById(id);
   if (!message) {
     return next(new ErrorHandler("message not found", 404));

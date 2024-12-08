@@ -6,6 +6,7 @@ const competitionSchema = new Schema({
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
   createdAt: { type: Date, default: Date.now() },
+  country: { type: String, required: true },
 });
 
 const Competition = mongoose.model("Competition", competitionSchema);

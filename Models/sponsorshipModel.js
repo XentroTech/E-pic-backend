@@ -10,6 +10,7 @@ const sponsorshipSchema = new mongoose.Schema({
   },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
+  country: { type: String, required: true },
 });
 
 const Sponsor = mongoose.model("Sponsorship", sponsorshipSchema);

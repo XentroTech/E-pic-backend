@@ -17,10 +17,11 @@ exports.createEntry = catchAsyncErrors(async (req, res, next) => {
     captured_date,
     entryFee,
   } = req.body;
-  const currentCompetition = await Competition.findOne({}).sort({
+  const currentCompetition = await Competition.findOne({
+    country: req.user.country,
+  }).sort({
     endDate: -1,
   });
-  console.log("from competition creation:", currentCompetition);
   let image_url = "";
   if (req.files) {
     if (req.files.image_url) {
@@ -48,6 +49,7 @@ exports.createEntry = catchAsyncErrors(async (req, res, next) => {
     camera_lens,
     captured_date,
     competition: currentCompetition._id,
+    country: req.user.country,
   });
 
   req.user.uploaded_images.push(newImage._id);

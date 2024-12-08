@@ -7,6 +7,7 @@ const appNotificationSchema = new Schema({
   message: { type: String, required: true },
   isSeen: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now() },
+  country: { type: String, required: true },
 });
 
 const AppNotification = mongoose.model(

@@ -20,9 +20,9 @@ const userSchema = new Schema(
     },
     email: {
       type: String,
-      required: [true, "Please enter your email"],
+      // required: [true, "Please enter your email"],
       unique: true,
-      validate: [validator.isEmail, "Please enter valid email"],
+      // validate: [validator.isEmail, "Please enter valid email"],
     },
     password: {
       type: String,

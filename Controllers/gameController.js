@@ -4,9 +4,9 @@ const ErrorHandler = require("../utils/errorHandler");
 
 exports.createGameTime = catchAsyncErrors(async (req, res, next) => {
   const { gameTime } = req.body;
-  console.log(gameTime);
   const newGameTime = await Game.create({
     gameTime: gameTime,
+    country: req.user.country,
   });
 
   await newGameTime.save();
@@ -19,7 +19,7 @@ exports.createGameTime = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.getGameTime = catchAsyncErrors(async (req, res, next) => {
-  const gameTime = await Game.find({});
+  const gameTime = await Game.find({ country: req.user.country });
 
   if (!gameTime) {
     return next(new ErrorHandler("Game Time not found!", 404));
@@ -38,7 +38,6 @@ exports.updateGameTime = catchAsyncErrors(async (req, res, next) => {
   if (!gameTimes) {
     return next(new ErrorHandler("Game time not found", 404));
   }
-  console.log(req.body.data);
   const updatedGameTime = await Game.findByIdAndUpdate(
     req.params.id,
     req.body.data,

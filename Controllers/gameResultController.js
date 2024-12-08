@@ -35,6 +35,7 @@ exports.createGameResult = catchAsyncErrors(async (req, res, next) => {
     userId: req.user._id,
     imageId,
     duration,
+    country: req.user.country,
   });
 
   const today = new Date();
@@ -54,6 +55,7 @@ exports.createGameResult = catchAsyncErrors(async (req, res, next) => {
     await GameLeaderBoard.create({
       user: req.user._id,
       duration,
+      country: req.user.country,
     });
   }
 
@@ -69,7 +71,7 @@ exports.createGameResult = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.getGameResult = catchAsyncErrors(async (req, res, next) => {
-  const gameResult = await GameResult.find({});
+  const gameResult = await GameResult.find({ country: req.user.country });
 
   if (!gameResult) {
     return next(new ErrorHandler("Game Result Not Found!", 404));

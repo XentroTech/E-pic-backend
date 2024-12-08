@@ -1,100 +1,215 @@
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const Image = require("../Models/imageModel");
 const ErrorHandler = require("../utils/errorHandler");
-
+const getDateRange = require("../utils/getDateRange");
 //get chart data
 exports.getChartData = catchAsyncErrors(async (req, res, next) => {
   const { interval = "daily" } = req.query;
 
-  // checking valid intervals
   const validIntervals = ["daily", "weekly", "monthly", "yearly"];
   if (!validIntervals.includes(interval)) {
     return next(new ErrorHandler("Invalid interval provided", 400));
   }
 
   const userId = req.user._id;
-  //if user not found
   if (!userId) {
     return next(new ErrorHandler("User ID is required", 400));
   }
 
-  const matchStage = { $match: { owner: userId } };
+  const { startDate, endDate } = getDateRange(interval);
+
+  const matchStage = {
+    $match: {
+      owner: userId,
+      "sold_details.date": { $gte: startDate, $lte: endDate },
+    },
+  };
   let groupStage;
 
-  //checking interval inputs and creating group data
+  // Set group stage based on the interval
   switch (interval) {
     case "daily":
       groupStage = {
         $group: {
           _id: {
-            $dateToString: { format: "%Y-%m-%d", date: "$sold_details.date" }, //daily as date
+            $dateToString: { format: "%H:00", date: "$sold_details.date" },
           },
           count: { $sum: 1 },
           totalEarnings: { $sum: "$sold_details.price" },
         },
       };
       break;
+
     case "weekly":
       groupStage = {
         $group: {
           _id: {
-            $dateToString: { format: "%Y-%U", date: "$sold_details.date" }, //weekly as date
+            dayOfWeek: { $dayOfWeek: "$sold_details.date" },
           },
           count: { $sum: 1 },
           totalEarnings: { $sum: "$sold_details.price" },
         },
       };
       break;
+
     case "monthly":
       groupStage = {
         $group: {
-          _id: {
-            $dateToString: { format: "%Y-%m", date: "$sold_details.date" }, //month as date
-          },
+          _id: { $dayOfMonth: "$sold_details.date" },
           count: { $sum: 1 },
           totalEarnings: { $sum: "$sold_details.price" },
         },
       };
       break;
+
     case "yearly":
       groupStage = {
         $group: {
-          _id: {
-            $dateToString: { format: "%Y", date: "$sold_details.date" }, // month as yearly
-          },
+          _id: { $month: "$sold_details.date" },
           count: { $sum: 1 },
           totalEarnings: { $sum: "$sold_details.price" },
         },
       };
       break;
+
     default:
       return next(new ErrorHandler("Invalid interval provided", 400));
   }
 
   try {
-    //fetching data from image model as match and group stage
+    // Aggregate data
     const chartData = await Image.aggregate([
       { $unwind: "$sold_details" },
-
       matchStage,
       groupStage,
+      { $sort: { _id: 1 } },
+      {
+        $facet: {
+          intervalData: [],
+          totals: [
+            {
+              $group: {
+                _id: null,
+                totalCount: { $sum: "$count" },
+                totalEarnings: { $sum: "$totalEarnings" },
+              },
+            },
+          ],
+        },
+      },
     ]);
 
-    //extracting data from response
-    const totalSold = chartData[0]?.count || 0;
-    const totalEarning = chartData[0]?.totalEarnings || [];
-    res.status(200).send({
+    const intervalData = chartData[0]?.intervalData || [];
+    const totals = chartData[0]?.totals[0] || {
+      totalCount: 0,
+      totalEarnings: 0,
+    };
+
+    // Prepare response data
+    let formattedData;
+    switch (interval) {
+      case "daily": {
+        const allHours = Array.from(
+          { length: 12 },
+          (_, i) => `${i === 0 ? 12 : i} AM`
+        ).concat(
+          Array.from({ length: 12 }, (_, i) => `${i === 0 ? 12 : i} PM`)
+        );
+
+        formattedData = allHours.map((hour, index) => {
+          const data = intervalData.find((item) => {
+            const hourInt = parseInt(item._id.split(":")[0], 10);
+            return (
+              hourInt ===
+              (index === 0 ? 12 : index % 12) + (index >= 12 ? 12 : 0)
+            );
+          });
+          return {
+            hour,
+            count: data ? data.count : 0,
+            totalEarnings: data ? data.totalEarnings : 0,
+          };
+        });
+        break;
+      }
+
+      case "weekly": {
+        const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        formattedData = daysOfWeek.map((day, index) => {
+          const data = intervalData.find(
+            (item) => item._id.dayOfWeek === index + 1
+          );
+          return {
+            day,
+            count: data ? data.count : 0,
+            totalEarnings: data ? data.totalEarnings : 0,
+          };
+        });
+        break;
+      }
+
+      case "monthly": {
+        const daysInMonth = new Date(
+          new Date().getFullYear(),
+          new Date().getMonth() + 1,
+          0
+        ).getDate();
+        formattedData = Array.from({ length: daysInMonth }, (_, i) => {
+          const day = i + 1;
+          const data = intervalData.find((item) => item._id === day);
+          return {
+            day,
+            count: data ? data.count : 0,
+            totalEarnings: data ? data.totalEarnings : 0,
+          };
+        });
+        break;
+      }
+
+      case "yearly": {
+        const months = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
+        formattedData = months.map((month, index) => {
+          const data = intervalData.find((item) => item._id === index + 1);
+          return {
+            month,
+            count: data ? data.count : 0,
+            totalEarnings: data ? data.totalEarnings : 0,
+          };
+        });
+        break;
+      }
+    }
+
+    res.status(200).json({
       success: true,
       interval,
-      chartData,
-      totalSold,
-      totalEarning,
+      date:
+        interval === "daily"
+          ? new Date().toISOString().split("T")[0]
+          : undefined,
+      chartData: formattedData,
+      totals: {
+        totalCount: totals.totalCount,
+        totalEarnings: totals.totalEarnings,
+      },
     });
   } catch (error) {
     return next(new ErrorHandler("Failed to fetch chart data", 500));
   }
 });
-
 // get sold images
 exports.getSoldImages = catchAsyncErrors(async (req, res, next) => {
   const userId = req.user._id;
@@ -144,13 +259,13 @@ exports.getSoldImages = catchAsyncErrors(async (req, res, next) => {
 exports.getWeeklyTargetGraph = catchAsyncErrors(async (req, res, next) => {
   const userId = req.user._id;
 
-  //if user not found
   if (!userId) {
     return next(new ErrorHandler("User ID is required", 400));
   }
 
   const today = new Date();
-  //function for set starting date of the week
+
+  // Helper functions for start and end of the week
   const startOfWeek = (date, weeksAgo) => {
     const result = new Date(date);
     result.setDate(result.getDate() - result.getDay() - weeksAgo * 7);
@@ -158,7 +273,6 @@ exports.getWeeklyTargetGraph = catchAsyncErrors(async (req, res, next) => {
     return result;
   };
 
-  //function for set end date of the week
   const endOfWeek = (date, weeksAgo) => {
     const result = new Date(startOfWeek(date, weeksAgo));
     result.setDate(result.getDate() + 6);
@@ -166,79 +280,71 @@ exports.getWeeklyTargetGraph = catchAsyncErrors(async (req, res, next) => {
     return result;
   };
 
-  // Fetch sales data for the past 4 weeks
-  const salesData = await Image.aggregate([
-    { $unwind: "$sold_details" },
-    { $match: { "sold_details.date": { $exists: true }, owner: userId } },
-    {
-      $group: {
-        _id: {
-          week: {
-            $dateToString: { format: "%Y-%U", date: "$sold_details.date" },
+  try {
+    const targets = [];
+    const targetAchievedPercentages = [];
+    const weeklySales = [];
+    let totalPercentage = 0;
+
+    for (let i = 0; i < 4; i++) {
+      const start = startOfWeek(today, i);
+      const end = endOfWeek(today, i);
+
+      // Fetch sales data for the specific week
+      const salesData = await Image.aggregate([
+        { $unwind: "$sold_details" },
+        {
+          $match: {
+            "sold_details.date": { $gte: start, $lte: end },
+            owner: userId,
           },
-          year: { $dateToString: { format: "%Y", date: "$sold_details.date" } },
         },
-        weeklySales: { $sum: 1 },
-      },
-    },
-    {
-      $sort: { "_id.year": -1, "_id.week": -1 },
-    },
-  ]);
-  // console.log(salesData[0].weeklySale);
-  const targets = [];
-  const targetAchievedPercentages = [];
-  // Random initial target (5-10)
-  let randomTarget = Math.floor(Math.random() * (10 - 5 + 1)) + 5;
-  let averageTargetAchievement = 0;
+        {
+          $group: {
+            _id: null,
+            weeklySales: { $sum: 1 },
+          },
+        },
+      ]);
 
-  for (let i = 0; i < 4; i++) {
-    const start = startOfWeek(today, i);
-    const end = endOfWeek(today, i);
+      const salesCount = salesData[0]?.weeklySales || 0;
 
-    const weeklySale = salesData.find(
-      (weekData) =>
-        new Date(weekData._id.year, 0, 1 + (weekData._id.week - 1) * 7) >=
-          start &&
-        new Date(weekData._id.year, 0, 1 + (weekData._id.week - 1) * 7) <= end
-    );
-    const salesCount = weeklySale ? weeklySale.weeklySales : 0;
-    // const salesCount = salesData[0].weeklySale;
-    // console.log(salesCount);
-    // console.log(salesData[0].weeklySale);
-    // Assign target for the current week
-    let target;
-    if (i === 0) {
-      target = randomTarget;
-    } else {
-      const lastWeekSales =
-        targets[i - 1] < salesCount ? salesCount : targets[i - 1];
-      // Increment by 10% of last week's actual sales or target
-      target = Math.ceil(lastWeekSales * 1.1);
+      const target =
+        i === 0
+          ? // Default target if no sales
+            Math.max(salesCount || 5, 5)
+          : // Increment target by 10%
+            Math.ceil(Math.max(targets[i - 1], salesCount) * 1.1);
+
+      targets.unshift(target);
+      weeklySales.unshift(salesCount);
+
+      // Calculate percentage of target achieved
+      const percentage =
+        salesCount > 0 ? Math.min((salesCount / target) * 100, 100) : 0;
+      targetAchievedPercentages.unshift(Math.floor(percentage));
+
+      // Update total percentage for average calculation
+      totalPercentage += percentage;
     }
 
-    targets.unshift(target);
+    // Calculate average target achievement
+    const averageTargetAchievement = Math.floor(totalPercentage / 4);
 
-    // Calculate percentage of target fulfilled
-    const percentage =
-      salesCount > 0 ? Math.min((salesCount / target) * 100, 100) : 0;
-    targetAchievedPercentages.unshift(percentage);
-
-    // Update average target achievement
-    averageTargetAchievement += percentage;
+    res.status(200).json({
+      success: true,
+      graphData: {
+        weeks: ["First Week", "Second Week", "Third Week", "Fourth Week"],
+        targets,
+        sales: weeklySales.map((sales, index) => ({
+          week: `Week ${index + 1}`,
+          sales,
+        })),
+        targetAchievedPercentages,
+      },
+      averageTargetAchievement,
+    });
+  } catch (error) {
+    return next(new ErrorHandler("Failed to fetch weekly target graph", 500));
   }
-
-  // Calculate final average target fulfillment
-  averageTargetAchievement /= 4;
-
-  res.status(200).send({
-    success: true,
-    graphData: {
-      weeks: ["Week 1", "Week 2", "Week 3", "Week 4"],
-      targets,
-      sales: salesData.slice(0, 4).map((data) => data.weeklySales || 0),
-      targetAchievedPercentages,
-    },
-    averageTargetAchievement: averageTargetAchievement.toFixed(2),
-  });
 });

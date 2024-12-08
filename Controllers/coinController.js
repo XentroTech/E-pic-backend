@@ -2,12 +2,16 @@ const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const Coin = require("../Models/coinModel");
 const ErrorHandler = require("../utils/errorHandler");
 const User = require("../Models/userModel");
+const Transaction = require("../Models/transactionModal");
 
 //create coin info
 
 exports.createCoinInfo = catchAsyncErrors(async (req, res, next) => {
   const { coin, price, image_url, extraCoins, promoExpiration } = req.body;
 
+  if (!coin || !price) {
+    return next(new ErrorHandler("Please provide all information", 400));
+  }
   const promoActive = promoExpiration ? true : false;
 
   const coinInfo = await Coin({
@@ -17,6 +21,7 @@ exports.createCoinInfo = catchAsyncErrors(async (req, res, next) => {
     extraCoins: extraCoins || 0,
     promoExpiration,
     promoActive,
+    country: req.user.country,
   });
 
   await coinInfo.save();
@@ -30,7 +35,7 @@ exports.createCoinInfo = catchAsyncErrors(async (req, res, next) => {
 
 // get coin info
 exports.getCoinInfo = catchAsyncErrors(async (req, res, next) => {
-  const coinInfo = await Coin.find({});
+  const coinInfo = await Coin.find({ country: req.user.country });
   if (!coinInfo) {
     return next(new ErrorHandler("Coin info not found", 404));
   }
@@ -86,15 +91,24 @@ exports.purchaseCoin = catchAsyncErrors(async (req, res, next) => {
   }
 
   // Fetch coin info to check for active promo
-  const coinInfo = await Coin.findById(coinId);
+  const coinInfo = await Coin.find({ _id: coinId });
   if (!coinInfo) {
     return next(new ErrorHandler("Coin info not found", 404));
   }
-
+  const transactionsInfo = await Transaction.create({
+    user: req.user._id,
+    type: "purchase",
+    item: "coin",
+    amount: coin,
+    price: price,
+    country: req.user.country,
+  });
+  await transactionsInfo.save();
   // Check if promo is active and valid
   let finalCoinAmount = coin;
   if (coinInfo.promoActive && coinInfo.promoExpiration > new Date()) {
-    finalCoinAmount += coinInfo.extraCoins; // Add extra coins from promo
+    // Add extra coins from promo
+    finalCoinAmount += coinInfo.extraCoins;
   } else if (coinInfo.promoActive && coinInfo.promoExpiration <= new Date()) {
     // Deactivate promo if expired
     coinInfo.promoActive = false;

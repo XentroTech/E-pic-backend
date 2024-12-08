@@ -8,6 +8,7 @@ const processPayment = require("../utils/processPayment.js");
 const crypto = require("crypto");
 const { validationResult } = require("express-validator");
 const Image = require("../Models/imageModel.js");
+const AppNotification = require("../Models/appNotificationModel.js");
 const BASE_URL = "http://dev.e-pic.co/";
 
 //register
@@ -21,7 +22,7 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler(errors.array()[0].msg, 400));
   }
 
-  if (!name || !username || !email || !password || !mobileNo || !country) {
+  if (!name || !username || !password || !mobileNo || !country) {
     return next(new ErrorHandler("Please provide all information", 401));
   }
 
@@ -45,7 +46,15 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
         user_email: email,
         referralBonus,
       });
+      //sending notification
       await referredUser.save();
+      const sendNotification = await AppNotification.create({
+        user: referredUser._id,
+        title: `Referral Bonus notification`,
+        message: `Congratulations you got referral bonus ${referralBonus} for referring ${name}`,
+        country: country,
+      });
+      await sendNotification.save();
     } else {
       return next(
         new ErrorHandler(
@@ -80,13 +89,29 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
 
 //login
 exports.login = catchAsyncErrors(async (req, res, next) => {
-  const { email, password } = req.body;
+  const { email, mobileNo, password, fcmToken } = req.body;
 
-  if (!email || !password) {
-    return next(new ErrorHandler("Please enter email & password", 401));
+  if (!password || (!email && !mobileNo)) {
+    return next(
+      new ErrorHandler("Please enter email or mobile no & password", 401)
+    );
   }
 
-  const user = await User.findOne({ email }).select("+password");
+  const user = await User.findOne({
+    $or: [{ email: email }, { mobileNo: mobileNo }],
+  }).select("+password");
+
+  // updating fcm token
+  if (fcmToken) {
+    console.log(fcmToken);
+    console.lo;
+    const updateFcmToken = await User.findByIdAndUpdate(
+      user._id,
+      { fcmToken },
+      { new: true, runValidators: true }
+    );
+    await updateFcmToken.save();
+  }
 
   // if user is deactivated then can't login
   if (!user.isActive) {
@@ -245,14 +270,24 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
 
 //get all user
 exports.getUsers = catchAsyncErrors(async (req, res) => {
-  const { query = "", page = 1, limit = 10 } = req.query;
+  const {
+    query = "",
+    page = 1,
+    limit = 10,
+    role = null,
+    country = null,
+  } = req.query;
   const requestingUserRole = req.user ? req.user.role : null;
-
   let searchCriteria = [];
 
   // If the user is an admin, exclude superadmins and admins from the results
-  if (requestingUserRole === "admin") {
-    searchCriteria.push({ role: { $nin: ["superadmin", "admin"] } });
+  if (requestingUserRole === "superadmin") {
+    // no search criteria will be allowed
+  } else if (requestingUserRole === "admin") {
+    searchCriteria.push({
+      role: { $nin: ["superadmin", "admin"] },
+      country: req.user.country,
+    });
   }
 
   // If search query exists, search by username, email, or mobile
@@ -262,8 +297,17 @@ exports.getUsers = catchAsyncErrors(async (req, res) => {
         { username: { $regex: query, $options: "i" } }, // Case-insensitive search
         { email: { $regex: query, $options: "i" } },
         { mobileNo: { $regex: query } },
+        { role: { $regex: query, $options: "i" } },
       ],
     });
+  }
+
+  if (role && role != "all") {
+    searchCriteria.push({ role: role });
+  }
+
+  if (country && country != "all") {
+    searchCriteria.push({ country: country });
   }
 
   // Combine search criteria using $and if there are any criteria
@@ -499,6 +543,14 @@ exports.followUser = catchAsyncErrors(async (req, res, next) => {
     // Follow
     userToFollow.followers.push(currentUserId);
     currentUser.following.push(userToFollowId);
+    // sending notification
+    const sendNotification = await AppNotification.create({
+      user: userToFollowId,
+      title: `${req.user.name} `,
+      message: `following you`,
+      country: req.user.country,
+    });
+    await sendNotification.save();
   }
 
   await userToFollow.save();

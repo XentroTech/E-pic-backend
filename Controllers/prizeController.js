@@ -10,7 +10,6 @@ const BASE_URL = "http://dev.e-pic.co/";
 
 exports.createPrizeInfo = catchAsyncErrors(async (req, res, next) => {
   let { type, name, rank, value, image_url, position, price } = req.body;
-  console.log(req.body);
 
   try {
     // Process image if included
@@ -43,6 +42,7 @@ exports.createPrizeInfo = catchAsyncErrors(async (req, res, next) => {
       value,
       position,
       price,
+      country: req.user.country,
     });
 
     await prizeInfo.save();
@@ -64,7 +64,7 @@ exports.createPrizeInfo = catchAsyncErrors(async (req, res, next) => {
 
 // get prize info
 exports.getPrizeInfo = catchAsyncErrors(async (req, res, next) => {
-  const prizeInfo = await Prize.find({});
+  const prizeInfo = await Prize.find({ country: req.user.country });
 
   res.status(200).json({
     success: true,
@@ -142,6 +142,7 @@ exports.getWinnersInfo = catchAsyncErrors(async (req, res, next) => {
   if (type === "game") {
     leaderboard = await GameLeaderBoard.find({
       date: { $gte: startOfDay, $lte: endOfDay },
+      country: req.user.country,
     })
       .sort({ duration: 1 })
       .limit(10)
@@ -149,6 +150,7 @@ exports.getWinnersInfo = catchAsyncErrors(async (req, res, next) => {
   } else if (type === "competition") {
     const competition = await Competition.findOne({
       createdAt: { $gte: startOfDay, $lte: endOfDay },
+      country: req.user.country,
     });
 
     if (!competition) {
@@ -162,7 +164,6 @@ exports.getWinnersInfo = catchAsyncErrors(async (req, res, next) => {
       .limit(10)
       .populate("owner", "name wallet");
   }
-  console.log(leaderboard);
   if (!leaderboard || leaderboard.length === 0) {
     return next(new ErrorHandler("No winners found for the given date.", 404));
   }
@@ -177,7 +178,6 @@ exports.getWinnersInfo = catchAsyncErrors(async (req, res, next) => {
 // prize distribution
 exports.distributePrizes = catchAsyncErrors(async (req, res, next) => {
   const { date, type } = req.body;
-  console.log(date, type);
 
   if (!type || !["game", "competition"].includes(type)) {
     return next(
@@ -193,8 +193,6 @@ exports.distributePrizes = catchAsyncErrors(async (req, res, next) => {
   const endOfDay = new Date(date);
   endOfDay.setUTCHours(23, 59, 59, 999);
 
-  console.log(startOfDay, endOfDay);
-
   let leaderboard;
 
   if (type === "game") {
@@ -204,7 +202,6 @@ exports.distributePrizes = catchAsyncErrors(async (req, res, next) => {
       .sort({ duration: 1 })
       .limit(10)
       .populate("user", "name wallet");
-    console.log("gameLeaderBoard:", leaderboard);
   } else if (type === "competition") {
     const competition = await Competition.findOne({
       createdAt: { $gte: startOfDay, $lte: endOfDay },
@@ -220,7 +217,6 @@ exports.distributePrizes = catchAsyncErrors(async (req, res, next) => {
       .sort({ likesCount: -1 })
       .limit(10)
       .populate("owner", "name wallet");
-    console.log("competitionLeaderBoard:", leaderboard);
   }
   if (!leaderboard || leaderboard.length === 0) {
     return next(new ErrorHandler("No winners found for the given date.", 404));
@@ -228,7 +224,6 @@ exports.distributePrizes = catchAsyncErrors(async (req, res, next) => {
 
   // Fetch prizes for the day
   const prizes = await Prize.find().sort({ rank: 1 });
-  console.log("prize:", prizes);
   if (!prizes || prizes.length === 0) {
     return next(new ErrorHandler("Prizes not set for the given date.", 404));
   }
@@ -247,12 +242,14 @@ exports.distributePrizes = catchAsyncErrors(async (req, res, next) => {
         user: winner._id,
         title: "Game prize",
         message: `Congratulations! You have won a ${prize.name}. It will be sent to you via courier shortly.`,
+        country: req.user.country,
       });
 
       prizeDistribution.push({
         user: winner._id,
         prize: prize.name,
         message: `Physical prize (${prize.name}) notification sent.`,
+        country: req.user.country,
       });
     } else if (prize.type === "coin") {
       // Add coins to user's wallet
@@ -264,12 +261,14 @@ exports.distributePrizes = catchAsyncErrors(async (req, res, next) => {
         user: winner._id,
         title: "Game Prize",
         message: `Congratulations! You have won ${prize.value} coins. They have been added to your wallet.`,
+        country: req.user.country,
       });
 
       prizeDistribution.push({
         user: winner._id,
         prize: `${prize.value} coins`,
         message: `${prize.value} coins added to wallet and notification sent.`,
+        country: req.user.country,
       });
     }
   }

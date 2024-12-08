@@ -14,6 +14,6 @@ router.post("/imageSpaces", isAuthenticated, createImageSpaceInfo);
 router.get("/imageSpaces", isAuthenticated, getImageSpacesInfo);
 router.patch("/imageSpaces/:id", isAuthenticated, updateImageSpacesInfo);
 router.delete("/imageSpaces/:id", isAuthenticated, deleteImageSpacesInfo);
-router.post("/imageSpaces/purchase/:id", isAuthenticated, purchaseSpace);
+router.post("/imageSpaces/purchase/", isAuthenticated, purchaseSpace);
 
 module.exports = router;
