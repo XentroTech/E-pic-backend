@@ -142,6 +142,7 @@ exports.getWinnersInfo = catchAsyncErrors(async (req, res, next) => {
   if (type === "game") {
     leaderboard = await GameLeaderBoard.find({
       date: { $gte: startOfDay, $lte: endOfDay },
+      country: req.user.country,
     })
       .sort({ duration: 1 })
       .limit(10)
@@ -149,6 +150,7 @@ exports.getWinnersInfo = catchAsyncErrors(async (req, res, next) => {
   } else if (type === "competition") {
     const competition = await Competition.findOne({
       createdAt: { $gte: startOfDay, $lte: endOfDay },
+      country: req.user.country,
     });
 
     if (!competition) {

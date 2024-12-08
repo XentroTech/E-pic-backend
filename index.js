@@ -31,6 +31,7 @@ const dashboardStatistics = require("./Routes/dashboardRoutes");
 const transaction = require("./Routes/transactionRoutes");
 const conConversion = require("./Routes/coinConversionRoutes");
 const searchbarTitle = require("./Routes/searchbarTitleRoutes");
+const pushNotification = require("./Routes/pushNotificaitonRoutes");
 
 // const swaggerUi = require("swagger-ui-express");
 // const swaggerDocs = require("./swagger");
@@ -43,10 +44,22 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // initialize firebase admin
+require("dotenv").config();
+
 // admin.initializeApp({
-//   credential: admin.credential.cert(serviceAccount),
+//   credential: admin.credential.cert({
+//     projectId: process.env.FIREBASE_PROJECT_ID,
+//     privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+//     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+//   }),
 // });
 
+const serviceAccount = require("./config/service-account-file.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+console.log("Firebase initialized");
 app.use(express.json());
 app.use("/uploads", express.static(uploadPath));
 
@@ -98,6 +111,7 @@ app.use("/api/v1/", dashboardStatistics);
 app.use("/api/v1/", transaction);
 app.use("/api/v1/", conConversion);
 app.use("/api/v1/", searchbarTitle);
+app.use("/api/v1/", pushNotification);
 
 // Error middleware
 app.use(errorMiddleware);

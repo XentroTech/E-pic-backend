@@ -8,9 +8,9 @@ const {
 } = require("../Controllers/searchbarTitleController");
 const router = express.Router();
 
-router.post("/searchbarTitle/create", isAuthenticated, createTitle);
-router.get("/searchbarTitle/list", isAuthenticated, getTitle);
-router.patch("/searchbarTitle/update/:id", isAuthenticated, updateTitle);
-router.delete("/searchbarTitle/delete/:id", isAuthenticated, deleteTitle);
+router.post("/searchBarTitle/create", isAuthenticated, createTitle);
+router.get("/searchBarTitle/list", isAuthenticated, getTitle);
+router.patch("/searchBarTitle/update/:id", isAuthenticated, updateTitle);
+router.delete("/searchBarTitle/delete/:id", isAuthenticated, deleteTitle);
 
 module.exports = router;

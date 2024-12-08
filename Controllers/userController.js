@@ -101,10 +101,13 @@ exports.login = catchAsyncErrors(async (req, res, next) => {
     $or: [{ email: email }, { mobileNo: mobileNo }],
   }).select("+password");
 
+  // updating fcm token
   if (fcmToken) {
+    console.log(fcmToken);
+    console.lo;
     const updateFcmToken = await User.findByIdAndUpdate(
       user._id,
-      { ...req.body.fcmToken },
+      { fcmToken },
       { new: true, runValidators: true }
     );
     await updateFcmToken.save();

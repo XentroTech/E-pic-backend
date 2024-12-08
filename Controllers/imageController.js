@@ -6,7 +6,7 @@ const ErrorHandler = require("../utils/errorHandler");
 const processPayment = require("../utils/processPayment");
 const path = require("path");
 const BASE_URL = "http://dev.e-pic.co/";
-
+const Transaction = require("../Models/transactionModal");
 //upload photo
 exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
   const imageCount = req.files.length;
@@ -142,7 +142,6 @@ exports.getPendingImages = catchAsyncErrors(async (req, res, next) => {
         { userId: { $regex: query, $options: "i" } },
         { email: { $regex: query, $options: "i" } },
       ],
-      $and: [{ country: req.user.country }],
     };
   }
 
@@ -152,7 +151,7 @@ exports.getPendingImages = catchAsyncErrors(async (req, res, next) => {
   // Use aggregate to fetch images along with owner details
   const images = await Image.aggregate([
     { $match: searchCriteria },
-    { $match: { isLive: false } },
+    { $match: { isLive: false, country: req.user.country } },
     {
       $lookup: {
         from: "users",
@@ -206,7 +205,7 @@ exports.getLiveImages = catchAsyncErrors(async (req, res, next) => {
   // Use aggregate to fetch images along with owner details
   const images = await Image.aggregate([
     { $match: searchCriteria },
-    { $match: { isLive: true } },
+    { $match: { isLive: true, country: req.user.country } },
     {
       $lookup: {
         from: "users",
@@ -352,13 +351,15 @@ exports.likeImage = catchAsyncErrors(async (req, res, next) => {
     //updating user's liked_images attribute
     user.liked_images.push(image._id);
     //sending notification
-    const sendNotification = await AppNotification.create({
-      user: image.owner,
-      title: `${user.name}`,
-      message: ` liked your image`,
-      country: req.user.country,
-    });
-    await sendNotification.save();
+    if (req.user._id.toString() != image.owner._id.toString()) {
+      const sendNotification = await AppNotification.create({
+        user: image.owner,
+        title: `${user.name}`,
+        message: `liked your image`,
+        country: req.user.country,
+      });
+      await sendNotification.save();
+    }
   }
 
   await user.save();
@@ -406,12 +407,25 @@ exports.purchaseImage = catchAsyncErrors(async (req, res, next) => {
 
   // Update image and user data
   image.sold_count += 1;
-  image.owner.total_sales += price;
+  image.owner.total_sales += price / 2;
+
   image.sold_details.push({
     buyer: user._id,
     date: Date.now(),
-    price: price,
+    price: price / 2,
   });
+
+  //update transaction model
+  const transactionInfo = await Transaction.create({
+    user: req.user._id,
+    type: "purchase",
+    item: "image",
+    amount: 1,
+    price: price / 2,
+    country: req.user.country,
+  });
+  await transactionInfo.save();
+
   image.bought_by.push(user._id);
   user.purchased_images.push({ image: image._id });
 

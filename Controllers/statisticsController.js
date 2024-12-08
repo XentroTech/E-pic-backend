@@ -1,7 +1,7 @@
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const Image = require("../Models/imageModel");
 const ErrorHandler = require("../utils/errorHandler");
-
+const getDateRange = require("../utils/getDateRange");
 //get chart data
 exports.getChartData = catchAsyncErrors(async (req, res, next) => {
   const { interval = "daily" } = req.query;
@@ -16,7 +16,14 @@ exports.getChartData = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("User ID is required", 400));
   }
 
-  const matchStage = { $match: { owner: userId } };
+  const { startDate, endDate } = getDateRange(interval);
+
+  const matchStage = {
+    $match: {
+      owner: userId,
+      "sold_details.date": { $gte: startDate, $lte: endDate },
+    },
+  };
   let groupStage;
 
   // Set group stage based on the interval

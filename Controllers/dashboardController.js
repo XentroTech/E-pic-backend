@@ -5,6 +5,7 @@ const Image = require("../Models/imageModel");
 const ErrorHandler = require("../utils/errorHandler");
 const Prize = require("../Models/prizeModel");
 const Coin = require("../Models/coinModel");
+const getDateRange = require("../utils/getDateRange");
 
 //image revenue
 // exports.getImageRevenue = catchAsyncErrors(async (req, res, next) => {
@@ -242,8 +243,14 @@ exports.getImageRevenue = catchAsyncErrors(async (req, res, next) => {
   if (!userId) {
     return next(new ErrorHandler("User ID is required", 400));
   }
-
-  // const matchStage = { $match: { country: req.user.country } };
+  const { startDate, endDate } = getDateRange(interval);
+  const matchStage = {
+    $match: {
+      country: req.user.country,
+      type: "image",
+      createdAt: { $gte: startDate, $lte: endDate },
+    },
+  };
   let groupStage;
 
   // Set group stage based on the interval
@@ -252,10 +259,10 @@ exports.getImageRevenue = catchAsyncErrors(async (req, res, next) => {
       groupStage = {
         $group: {
           _id: {
-            $dateToString: { format: "%H:00", date: "$sold_details.date" },
+            $dateToString: { format: "%H:00", date: "$createdAt" },
           },
           count: { $sum: 1 },
-          totalEarnings: { $sum: "$sold_details.price" },
+          totalEarnings: { $sum: "$price" },
         },
       };
       break;
@@ -264,10 +271,10 @@ exports.getImageRevenue = catchAsyncErrors(async (req, res, next) => {
       groupStage = {
         $group: {
           _id: {
-            dayOfWeek: { $dayOfWeek: "$sold_details.date" },
+            dayOfWeek: { $dayOfWeek: "$createdAt" },
           },
           count: { $sum: 1 },
-          totalEarnings: { $sum: "$sold_details.price" },
+          totalEarnings: { $sum: "$price" },
         },
       };
       break;
@@ -275,9 +282,9 @@ exports.getImageRevenue = catchAsyncErrors(async (req, res, next) => {
     case "monthly":
       groupStage = {
         $group: {
-          _id: { $dayOfMonth: "$sold_details.date" },
+          _id: { $dayOfMonth: "$createdAt" },
           count: { $sum: 1 },
-          totalEarnings: { $sum: "$sold_details.price" },
+          totalEarnings: { $sum: "$price" },
         },
       };
       break;
@@ -285,9 +292,9 @@ exports.getImageRevenue = catchAsyncErrors(async (req, res, next) => {
     case "yearly":
       groupStage = {
         $group: {
-          _id: { $month: "$sold_details.date" },
+          _id: { $month: "$createdAt" },
           count: { $sum: 1 },
-          totalEarnings: { $sum: "$sold_details.price" },
+          totalEarnings: { $sum: "$price" },
         },
       };
       break;
@@ -298,9 +305,8 @@ exports.getImageRevenue = catchAsyncErrors(async (req, res, next) => {
 
   try {
     // Aggregate data
-    const chartData = await Image.aggregate([
-      { $unwind: "$sold_details" },
-      // matchStage,
+    const chartData = await Transaction.aggregate([
+      matchStage,
       groupStage,
       { $sort: { _id: 1 } },
       {
@@ -444,7 +450,15 @@ exports.getSpaceRevenue = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("User ID is required", 400));
   }
 
-  const matchStage = { $match: { country: req.user.country, item: "space" } };
+  const { startDate, endDate } = getDateRange(interval);
+
+  const matchStage = {
+    $match: {
+      country: req.user.country,
+      item: "space",
+      createdAt: { $gte: startDate, $lte: endDate },
+    },
+  };
   let groupStage;
 
   // Set group stage based on the interval
@@ -644,12 +658,22 @@ exports.getCoinRevenue = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("User ID is required", 400));
   }
 
-  const matchStage = { $match: { country: req.user.country, item: "coin" } };
+  const { startDate, endDate } = getDateRange(interval);
+
+  const matchStage = {
+    $match: {
+      country: req.user.country,
+      item: "coin",
+      createdAt: { $gte: startDate, $lte: endDate },
+    },
+  };
   let groupStage;
 
-  // Set group stage based on the interval
   switch (interval) {
     case "daily":
+      // (matchStage = {
+      //   $match: { createdAt: { $gte: startOfday, $lte: endOfDay } },
+      // }),
       groupStage = {
         $group: {
           _id: {

@@ -8,6 +8,7 @@ exports.createCompetition = catchAsyncErrors(async (req, res, next) => {
     title,
     startDate,
     endDate,
+    country: req.user.country,
   });
 
   res.status(200).json({

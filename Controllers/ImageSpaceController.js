@@ -28,7 +28,7 @@ exports.createImageSpaceInfo = catchAsyncErrors(async (req, res, next) => {
 
 // get image space info
 exports.getImageSpacesInfo = catchAsyncErrors(async (req, res, next) => {
-  const imageSpaceInfo = await ImageSpace.find({});
+  const imageSpaceInfo = await ImageSpace.find({ country: req.user.country });
 
   res.status(200).json({
     success: true,

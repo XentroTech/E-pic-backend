@@ -39,6 +39,7 @@ exports.getActiveSponsorships = catchAsyncErrors(async (req, res) => {
   const sponsorships = await Sponsorship.find({
     startDate: { $lte: currentDate },
     endDate: { $gte: currentDate },
+    country: req.user.country,
   });
 
   res.status(200).json({

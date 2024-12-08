@@ -21,6 +21,7 @@ exports.getGameLeaderBoard = catchAsyncErrors(async (req, res, next) => {
         $gte: startOfDay,
         $lte: endOfDay,
       },
+      country: req.user.country,
     })
       .populate("user", "name profile_pic")
       .sort({ duration: 1 })

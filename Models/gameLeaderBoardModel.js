@@ -5,6 +5,7 @@ const gameLeaderBoardSchema = new mongoose.Schema({
   duration: { type: Number, required: true },
   date: { type: Date, default: Date.now },
   rank: { type: String },
+  country: { type: String, required: true },
 });
 
 const GameLeaderBoard = mongoose.model(

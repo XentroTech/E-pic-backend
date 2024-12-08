@@ -35,7 +35,7 @@ exports.createCoinInfo = catchAsyncErrors(async (req, res, next) => {
 
 // get coin info
 exports.getCoinInfo = catchAsyncErrors(async (req, res, next) => {
-  const coinInfo = await Coin.find({});
+  const coinInfo = await Coin.find({ country: req.user.country });
   if (!coinInfo) {
     return next(new ErrorHandler("Coin info not found", 404));
   }

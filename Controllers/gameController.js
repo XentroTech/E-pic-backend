@@ -6,6 +6,7 @@ exports.createGameTime = catchAsyncErrors(async (req, res, next) => {
   const { gameTime } = req.body;
   const newGameTime = await Game.create({
     gameTime: gameTime,
+    country: req.user.country,
   });
 
   await newGameTime.save();
@@ -18,7 +19,7 @@ exports.createGameTime = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.getGameTime = catchAsyncErrors(async (req, res, next) => {
-  const gameTime = await Game.find({});
+  const gameTime = await Game.find({ country: req.user.country });
 
   if (!gameTime) {
     return next(new ErrorHandler("Game Time not found!", 404));
