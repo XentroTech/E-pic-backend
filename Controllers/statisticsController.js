@@ -348,3 +348,96 @@ exports.getWeeklyTargetGraph = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Failed to fetch weekly target graph", 500));
   }
 });
+
+exports.getWeeklyTargetGraph = catchAsyncErrors(async (req, res, next) => {
+  const userId = req.user._id;
+
+  if (!userId) {
+    return next(new ErrorHandler("User ID is required", 400));
+  }
+
+  const today = new Date();
+
+  const startOfWeek = (date, weeksAgo) => {
+    const result = new Date(date);
+    result.setDate(result.getDate() - result.getDay() - weeksAgo * 7);
+    result.setHours(0, 0, 0, 0);
+    return result;
+  };
+
+  const endOfWeek = (date, weeksAgo) => {
+    const result = new Date(date);
+    result.setDate(result.getDate() - result.getDay() - weeksAgo * 7 + 6);
+    result.setHours(23, 59, 59, 999);
+    return result;
+  };
+
+  try {
+    const targets = [];
+    const targetAchievedPercentages = [];
+    const weeklySales = [];
+    let totalPercentage = 0;
+
+    for (let i = 0; i < 4; i++) {
+      const start = startOfWeek(today, i);
+      const end = endOfWeek(today, i);
+
+      // Fetch sales data for the specific week
+      const salesData = await Image.aggregate([
+        { $unwind: "$sold_details" },
+        {
+          $match: {
+            "sold_details.date": { $gte: start, $lte: end },
+            owner: userId,
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            weeklySales: { $sum: 1 },
+          },
+        },
+      ]);
+
+      const salesCount = salesData[0]?.weeklySales || 0;
+
+      const target =
+        i === 0
+          ? // Default target if no sales
+            Math.max(salesCount || 5, 5)
+          : // Increment target by 10%
+            Math.ceil(Math.max(targets[i - 1], salesCount) * 1.1);
+
+      targets.unshift(target);
+      weeklySales.unshift(salesCount);
+
+      // Calculate percentage of target achieved
+      const percentage =
+        salesCount > 0 ? Math.min((salesCount / target) * 100, 100) : 0;
+      targetAchievedPercentages.unshift(Math.floor(percentage));
+
+      // Update total percentage for average calculation
+      totalPercentage += percentage;
+    }
+
+    // Calculate average target achievement
+    const averageTargetAchievement = Math.floor(totalPercentage / 4);
+
+    res.status(200).json({
+      success: true,
+      graphData: {
+        weeks: ["Fourth Week", "Third Week", "Second Week", "First Week"],
+        targets,
+        sales: weeklySales.map((sales, index) => ({
+          week: `Week ${index + 1}`,
+          sales,
+        })),
+        targetAchievedPercentages,
+      },
+      averageTargetAchievement,
+    });
+  } catch (error) {
+    return next(new ErrorHandler("Failed to fetch weekly target graph", 500));
+  }
+});
+
