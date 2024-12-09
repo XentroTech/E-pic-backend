@@ -17,12 +17,12 @@ const getDateRange = (interval) => {
       const dayOfWeek = now.getDay();
       startDate = new Date();
       // 1st day of week
-      startDate.setDate(now.setDate() - dayOfWeek);
+      startDate.setDate(now.getDate() - dayOfWeek);
       startDate.setHours(0, 0, 0, 0);
 
       endDate = new Date();
       // last day of week
-      endDate.setDate(now.setDate() + (6 - dayOfWeek));
+      endDate.setDate(now.getDate() + (6 - dayOfWeek));
       endDate.setHours(23, 59, 59, 999);
       break;
     case "monthly":

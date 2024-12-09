@@ -105,7 +105,6 @@ exports.getImageRevenue = catchAsyncErrors(async (req, res, next) => {
     ]);
 
     const intervalData = chartData[0]?.intervalData || [];
-    console.log(intervalData);
     const totals = chartData[0]?.totals[0] || {
       totalCount: 0,
       totalEarnings: 0,
@@ -451,9 +450,6 @@ exports.getCoinRevenue = catchAsyncErrors(async (req, res, next) => {
 
   switch (interval) {
     case "daily":
-      // (matchStage = {
-      //   $match: { createdAt: { $gte: startOfday, $lte: endOfDay } },
-      // }),
       groupStage = {
         $group: {
           _id: {

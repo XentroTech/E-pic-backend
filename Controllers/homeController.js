@@ -2,7 +2,6 @@ const Image = require("../Models/imageModel");
 const User = require("../Models/userModel");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const ErrorHandler = require("../utils/errorHandler");
-const mongoose = require("mongoose");
 
 //get Top sellers
 exports.getTopSellers = catchAsyncErrors(async (req, res, next) => {
@@ -171,15 +170,16 @@ exports.getFeaturedImages = catchAsyncErrors(async (req, res, next) => {
 
 // get images as category
 exports.getImagesAsCategory = catchAsyncErrors(async (req, res, next) => {
-  const categoryName = req.params;
-
-  const images = await Image.find({ category: categoryName }).populate(
+  if (!req.params.category) {
+    return next(new ErrorHandler("Please provide category"));
+  }
+  const images = await Image.find({ category: req.params.category }).populate(
     "owner",
     "name profile_pic"
   );
 
   if (!images) {
-    return next(new ErrorHandler("Images not found!"));
+    return next(new ErrorHandler("Image not found or invalid category!"));
   }
 
   res.status(200).json({

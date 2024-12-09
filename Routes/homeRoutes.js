@@ -22,7 +22,7 @@ router.get("/weeklyTop", isAuthenticated, getWeeklyTopSellingImages);
 router.get("/forYou", isAuthenticated, getForYouImages);
 router.get("/newlyAdded", isAuthenticated, getNewlyAddedImages);
 router.get("/featured", isAuthenticated, getFeaturedImages);
-router.get("/category/:categoryName", isAuthenticated, getImagesAsCategory);
+router.get("/category/:category", isAuthenticated, getImagesAsCategory);
 router.get("/followed", isAuthenticated, getImagesOfFollowedUser);
 router.get("/search", isAuthenticated, search);
 

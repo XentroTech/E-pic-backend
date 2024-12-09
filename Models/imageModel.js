@@ -33,5 +33,21 @@ const imageSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// imageSchema.pre("remove", async function (next) {
+//   try {
+//     // Remove image reference from users who liked it
+//     await User.updateMany(
+//       { _id: { $in: this.likes } },
+//       { $pull: { likedImages: this._id } } // Remove from user's likedImages list
+//     );
+
+//     // Remove other references related to this image if needed
+//     // Example: Sold details, competitions, etc.
+//     next();
+//   } catch (error) {
+//     next(error);
+//   }
+// });
+
 const Image = mongoose.model("Image", imageSchema);
 module.exports = Image;

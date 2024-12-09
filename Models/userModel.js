@@ -128,4 +128,14 @@ userSchema.methods.getForgetPasswordOtp = function () {
   return resetOtp;
 };
 
+// userSchema.pre("remove", async function (next) {
+//   try {
+//     // Remove all images uploaded by this user
+//     await Image.deleteMany({ owner: this._id });
+//     next();
+//   } catch (error) {
+//     next(error);
+//   }
+// });
+
 module.exports = mongoose.model("User", userSchema);

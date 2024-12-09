@@ -132,113 +132,234 @@ exports.getAllImages = catchAsyncErrors(async (req, res, next) => {
 });
 
 //get pending images
-exports.getPendingImages = catchAsyncErrors(async (req, res, next) => {
-  const { query = "", page = 1, limit = 10 } = req.query;
+// exports.getPendingImages = catchAsyncErrors(async (req, res, next) => {
+//   const { query = "", page = 1, limit = 10 } = req.query;
 
-  let searchCriteria = {};
+//   let searchCriteria = {};
+//   if (query) {
+//     // If search query exists, search by username, email, or mobile
+//     searchCriteria = {
+//       $or: [
+//         { title: { $regex: query, $options: "i" } },
+//         { email: { $regex: query, $options: "i" } },
+//       ],
+//     };
+//   }
+
+//   // Get the total count of image matching the search criteria
+//   const totalImages = await Image.countDocuments(searchCriteria);
+
+//   // Use aggregate to fetch images along with owner details
+//   const images = await Image.aggregate([
+//     { $match: searchCriteria },
+//     { $match: { isLive: false, country: req.user.country } },
+//     { $sort: { uploaded_at: -1 } },
+//     {
+//       $lookup: {
+//         from: "users",
+//         localField: "owner",
+//         foreignField: "_id",
+//         as: "ownerDetails",
+//       },
+//     },
+//     { $unwind: "$ownerDetails" },
+//     {
+//       $skip: (page - 1) * limit,
+//     },
+//     {
+//       $limit: parseInt(limit),
+//     },
+//   ]);
+
+//   // If no image found
+//   if (images.length === 0) {
+//     return next(new ErrorHandler("No Image found", 404));
+//   }
+
+//   // Send paginated response
+//   res.status(200).json({
+//     totalImages,
+//     currentPage: page,
+//     totalPages: Math.ceil(totalImages / limit),
+//     images,
+//   });
+// });
+exports.getPendingImages = catchAsyncErrors(async (req, res, next) => {
+  const { query = "", page = 1, limit = 10, country } = req.query;
+
+  let searchCriteria = { isLive: false };
+
+  // Check user role
+  if (req.user.role === "superadmin") {
+    // Superadmin can filter by any country if provided
+    if (country) {
+      searchCriteria.country = country;
+    }
+  } else if (req.user.role === "admin") {
+    // Admin can only see their own country's images
+    searchCriteria.country = req.user.country;
+  } else {
+    // Unauthorized access
+    return next(
+      new ErrorHandler("You are not authorized to perform this action", 403)
+    );
+  }
+  console.log(req.query.query);
   if (query) {
-    // If search query exists, search by username, email, or mobile
     searchCriteria = {
+      ...searchCriteria,
       $or: [
+        // Search by title
         { title: { $regex: query, $options: "i" } },
-        { email: { $regex: query, $options: "i" } },
+        // Search by owner's username
+        { "ownerDetails.username": { $regex: query, $options: "i" } },
+        // Search by owner's email
+        { "ownerDetails.email": { $regex: query, $options: "i" } },
       ],
     };
   }
 
-  // Get the total count of image matching the search criteria
-  const totalImages = await Image.countDocuments(searchCriteria);
-
-  // Use aggregate to fetch images along with owner details
-  const images = await Image.aggregate([
-    { $match: searchCriteria },
-    { $match: { isLive: false, country: req.user.country } },
-    { $sort: { uploaded_at: -1 } },
-    {
-      $lookup: {
-        from: "users",
-        localField: "owner",
-        foreignField: "_id",
-        as: "ownerDetails",
+  try {
+    // Total count query with isLive filter
+    const totalImages = await Image.aggregate([
+      { $match: searchCriteria },
+      {
+        $lookup: {
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "ownerDetails",
+        },
       },
-    },
-    { $unwind: "$ownerDetails" },
-    {
-      $skip: (page - 1) * limit,
-    },
-    {
-      $limit: parseInt(limit),
-    },
-  ]);
+      { $unwind: "$ownerDetails" },
+      { $count: "total" },
+    ]);
 
-  // If no image found
-  if (images.length === 0) {
-    return next(new ErrorHandler("No Image found", 404));
+    const totalImagesCount = totalImages[0]?.total || 0;
+
+    // Image retrieval query with isLive filter
+    const images = await Image.aggregate([
+      { $match: searchCriteria },
+      {
+        $lookup: {
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "ownerDetails",
+        },
+      },
+      { $unwind: "$ownerDetails" },
+      { $sort: { uploaded_at: -1 } },
+      { $skip: (page - 1) * limit },
+      { $limit: parseInt(limit) },
+    ]);
+
+    // If no images found
+    if (!images.length) {
+      return next(new ErrorHandler("No Image found", 404));
+    }
+
+    // Send paginated response
+    res.status(200).json({
+      success: true,
+      totalImages: totalImagesCount,
+      currentPage: page,
+      totalPages: Math.ceil(totalImagesCount / limit),
+      images,
+    });
+  } catch (error) {
+    return next(new ErrorHandler("Failed to fetch images", 500));
   }
-
-  // Send paginated response
-  res.status(200).json({
-    totalImages,
-    currentPage: page,
-    totalPages: Math.ceil(totalImages / limit),
-    images,
-  });
 });
 
 //get live images
 exports.getLiveImages = catchAsyncErrors(async (req, res, next) => {
-  const { query = "", page = 1, limit = 10 } = req.query;
+  const { query = "", page = 1, limit = 10, country } = req.query;
 
-  let searchCriteria = {};
+  let searchCriteria = { isLive: true };
+
+  // Check user role
+  if (req.user.role === "superadmin") {
+    // Superadmin can filter by any country if provided
+    if (country) {
+      searchCriteria.country = country;
+    }
+  } else if (req.user.role === "admin") {
+    // Admin can only see their own country's images
+    searchCriteria.country = req.user.country;
+  } else {
+    // Unauthorized access
+    return next(
+      new ErrorHandler("You are not authorized to perform this action", 403)
+    );
+  }
+
   if (query) {
-    // If search query exists, search by username, email, or mobile
     searchCriteria = {
+      ...searchCriteria,
       $or: [
+        // Search by title
         { title: { $regex: query, $options: "i" } },
-        { email: { $regex: query, $options: "i" } },
+        // Search by owner's username
+        { "ownerDetails.username": { $regex: query, $options: "i" } },
+        // Search by owner's email
+        { "ownerDetails.email": { $regex: query, $options: "i" } },
       ],
     };
   }
 
-  // Get the total count of image matching the search criteria
-  const totalImages = await Image.countDocuments(searchCriteria);
-
-  // Use aggregate to fetch images along with owner details
-  const images = await Image.aggregate([
-    { $match: searchCriteria },
-    { $match: { isLive: true, country: req.user.country } },
-    {
-      $lookup: {
-        from: "users",
-        localField: "owner",
-        foreignField: "_id",
-        as: "ownerDetails",
+  try {
+    // Total count query with isLive filter
+    const totalImages = await Image.aggregate([
+      { $match: searchCriteria },
+      {
+        $lookup: {
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "ownerDetails",
+        },
       },
-    },
-    { $unwind: "$ownerDetails" },
-    { $sort: { uploaded_at: -1 } },
-    {
-      $skip: (page - 1) * limit,
-    },
-    {
-      $limit: parseInt(limit),
-    },
-  ]);
+      { $unwind: "$ownerDetails" },
+      { $count: "total" },
+    ]);
 
-  // If no image found
-  if (images.length === 0) {
-    return next(new ErrorHandler("No Image found", 404));
+    const totalImagesCount = totalImages[0]?.total || 0;
+
+    // Image retrieval query with isLive filter
+    const images = await Image.aggregate([
+      { $match: searchCriteria },
+      {
+        $lookup: {
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "ownerDetails",
+        },
+      },
+      { $unwind: "$ownerDetails" },
+      { $sort: { uploaded_at: -1 } },
+      { $skip: (page - 1) * limit },
+      { $limit: parseInt(limit) },
+    ]);
+
+    // If no images found
+    if (!images.length) {
+      return next(new ErrorHandler("No Image found", 404));
+    }
+
+    // Send paginated response
+    res.status(200).json({
+      success: true,
+      totalImages: totalImagesCount,
+      currentPage: page,
+      totalPages: Math.ceil(totalImagesCount / limit),
+      images,
+    });
+  } catch (error) {
+    return next(new ErrorHandler("Failed to fetch images", 500));
   }
-
-  // Send paginated response
-  res.status(200).json({
-    totalImages,
-    currentPage: page,
-    totalPages: Math.ceil(totalImages / limit),
-    images,
-  });
 });
-
 // get an image
 exports.getAnImage = catchAsyncErrors(async (req, res, next) => {
   const image = await Image.findById(req.params.id).populate(

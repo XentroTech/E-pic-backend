@@ -7,13 +7,6 @@ const GameLeaderBoard = require("../Models/gameLeaderBoardModel");
 exports.createGameResult = catchAsyncErrors(async (req, res, next) => {
   const { imageId, duration } = req.body;
 
-  if (duration <= 0) {
-    return res.status(400).json({
-      success: false,
-      message: "Game result 0",
-    });
-  }
-
   const image = await Image.findById(imageId);
   if (!image) {
     return next(new ErrorHandler("Image not found.", 404));
@@ -29,6 +22,16 @@ exports.createGameResult = catchAsyncErrors(async (req, res, next) => {
         "Buy an another image, you have already played with this image "
       )
     );
+  }
+
+  if (duration <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Game result 0",
+    });
+    purchasedImage.isUsedForGame = true;
+    purchasedImage.played_at = new Date();
+    await req.user.save();
   }
 
   const newGameResult = await GameResult.create({
