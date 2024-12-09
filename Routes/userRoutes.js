@@ -20,6 +20,7 @@ const {
   getPurchasedImages,
   get_purchased_images,
   getReferralBonusDetails,
+  updatePassword,
 } = require("../Controllers/userController");
 const { loginValidator } = require("../middlewares/loginValidator");
 const { registerValidator } = require("../middlewares/registerValidator");
@@ -38,6 +39,7 @@ router.post("/logout", logout);
 router.post("/forgotPassword", forgotPassword);
 router.post("/verify/resetPasswordOtp", resetPasswordOtpVerify);
 router.patch("/password/reset/:email", resetPasswordValidator, resetPassword);
+router.patch("/password/update", isAuthenticated, updatePassword);
 
 //get an user
 router.get("/user/:id", isAuthenticated, getAUser);

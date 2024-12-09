@@ -375,6 +375,57 @@ exports.updateUser = catchAsyncErrors(async (req, res, next) => {
     user,
   });
 });
+// update password
+exports.updatePassword = catchAsyncErrors(async (req, res, next) => {
+  const { currentPassword, password, confirmPassword } = req.body;
+
+  // Check if all fields are provided
+  if (!currentPassword || !password || !confirmPassword) {
+    return next(
+      new ErrorHandler("Please provide current, new, and confirm password")
+    );
+  }
+
+  // Find the user by ID
+  const user = await User.findById(req.user._id);
+
+  // Compare current password
+  const isPasswordMatched = await user.comparePassword(currentPassword);
+
+  // If current password does not match
+  if (!isPasswordMatched) {
+    return next(new ErrorHandler("Invalid current password", 401));
+  }
+
+  // Check if new password and confirm password match
+  if (password !== confirmPassword) {
+    return next(new ErrorHandler("Password doesn't match"));
+  }
+
+  // Password validation
+  const validatePassword = (password) => {
+    const re = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+    return re.test(password);
+  };
+
+  if (!validatePassword(password)) {
+    return next(
+      new ErrorHandler(
+        "Password must be at least 8 characters long and include a number, an uppercase letter, a lowercase letter, and a special character"
+      )
+    );
+  }
+
+  // Update the user's password
+  user.password = password;
+
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Password has been updated",
+  });
+});
 
 // update user profile
 exports.updateUserProfile = catchAsyncErrors(async (req, res) => {

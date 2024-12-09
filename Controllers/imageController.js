@@ -195,7 +195,7 @@ exports.getPendingImages = catchAsyncErrors(async (req, res, next) => {
     if (country) {
       searchCriteria.country = country;
     }
-  } else if (req.user.role === "admin") {
+  } else if (req.user.role === "admin" || req.user.role === "moderator") {
     // Admin can only see their own country's images
     searchCriteria.country = req.user.country;
   } else {
@@ -284,7 +284,7 @@ exports.getLiveImages = catchAsyncErrors(async (req, res, next) => {
     if (country) {
       searchCriteria.country = country;
     }
-  } else if (req.user.role === "admin") {
+  } else if (req.user.role === "admin" || req.user.role === "moderator") {
     // Admin can only see their own country's images
     searchCriteria.country = req.user.country;
   } else {
