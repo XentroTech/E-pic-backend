@@ -140,7 +140,7 @@ exports.getPendingImages = catchAsyncErrors(async (req, res, next) => {
     // If search query exists, search by username, email, or mobile
     searchCriteria = {
       $or: [
-        { userId: { $regex: query, $options: "i" } },
+        { title: { $regex: query, $options: "i" } },
         { email: { $regex: query, $options: "i" } },
       ],
     };
@@ -263,7 +263,6 @@ exports.getMostLikedImages = catchAsyncErrors(async (req, res, next) => {
     .sort({ likesCount: -1 })
     .limit(10)
     .populate("owner", "name profile_pic");
-  console.log(images);
   res.status(200).json({
     success: true,
     statusCode: 200,

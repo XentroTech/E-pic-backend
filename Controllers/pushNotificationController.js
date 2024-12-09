@@ -4,7 +4,6 @@ const admin = require("firebase-admin");
 const User = require("../Models/userModel");
 exports.sendPushNotification = catchAsyncErrors(async (req, res, next) => {
   const { title, msg } = req.body;
-  console.log(title, msg);
   // Validate incoming data
   if (!title || !msg) {
     return next(new ErrorHandler("Please provide title, and Message.", 400));

@@ -40,7 +40,7 @@ exports.updateGameTime = catchAsyncErrors(async (req, res, next) => {
   }
   const updatedGameTime = await Game.findByIdAndUpdate(
     req.params.id,
-    req.body.data,
+    { ...req.body },
     { new: true, runValidators: true }
   );
 

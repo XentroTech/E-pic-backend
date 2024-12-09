@@ -5,7 +5,6 @@ const ErrorHandler = require("../utils/errorHandler");
 //create title
 exports.createTitle = catchAsyncErrors(async (req, res, next) => {
   const { title } = req.body;
-  console.log(title);
   if (!title) {
     return next(new ErrorHandler("please provide title", 400));
   }

@@ -45,6 +45,7 @@ exports.getWeeklyTopSellingImages = catchAsyncErrors(async (req, res, next) => {
 
   const images = await Image.find({
     uploaded_at: { $gte: startWeek, $lte: endWeek },
+    isLive: true,
   })
     .sort({ sold_count: -1 }) // Sort by sold count in descending order
     .populate("owner", "name profile_pic")
