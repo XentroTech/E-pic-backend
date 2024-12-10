@@ -59,7 +59,6 @@ const serviceAccount = require("./config/service-account-file.json");
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
-console.log("Firebase initialized");
 app.use(express.json());
 app.use("/uploads", express.static(uploadPath));
 

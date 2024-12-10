@@ -10,8 +10,8 @@ const getDateRange = require("../utils/getDateRange");
 //image revenue
 
 exports.getImageRevenue = catchAsyncErrors(async (req, res, next) => {
-  const { interval = "daily" } = req.query;
-
+  const { interval = "daily", country } = req.query;
+  console.log(interval, country);
   const validIntervals = ["daily", "weekly", "monthly", "yearly"];
   if (!validIntervals.includes(interval)) {
     return next(new ErrorHandler("Invalid interval provided", 400));
@@ -24,11 +24,21 @@ exports.getImageRevenue = catchAsyncErrors(async (req, res, next) => {
   const { startDate, endDate } = getDateRange(interval);
   const matchStage = {
     $match: {
-      country: req.user.country,
       item: "image",
       createdAt: { $gte: startDate, $lte: endDate },
     },
   };
+
+  // Adjust `country` filter based on user role
+  if (req.user.role === "super-admin") {
+    if (country) {
+      // Filter by specific country if provided
+      matchStage.$match.country = country;
+    }
+  } else {
+    // Restrict to the user's country for non-super-admin users
+    matchStage.$match.country = req.user.country;
+  }
   let groupStage;
 
   // Set group stage based on the interval
@@ -217,7 +227,7 @@ exports.getImageRevenue = catchAsyncErrors(async (req, res, next) => {
 });
 //space revenue
 exports.getSpaceRevenue = catchAsyncErrors(async (req, res, next) => {
-  const { interval = "daily" } = req.query;
+  const { interval = "daily", country } = req.query;
 
   const validIntervals = ["daily", "weekly", "monthly", "yearly"];
   if (!validIntervals.includes(interval)) {
@@ -233,11 +243,21 @@ exports.getSpaceRevenue = catchAsyncErrors(async (req, res, next) => {
 
   const matchStage = {
     $match: {
-      country: req.user.country,
       item: "space",
       createdAt: { $gte: startDate, $lte: endDate },
     },
   };
+
+  // Adjust `country` filter based on user role
+  if (req.user.role === "super-admin") {
+    if (country) {
+      // Filter by specific country if provided
+      matchStage.$match.country = country;
+    }
+  } else {
+    // Restrict to the user's country for non-super-admin users
+    matchStage.$match.country = req.user.country;
+  }
   let groupStage;
 
   // Set group stage based on the interval
@@ -425,7 +445,7 @@ exports.getSpaceRevenue = catchAsyncErrors(async (req, res, next) => {
 });
 //coin revenue
 exports.getCoinRevenue = catchAsyncErrors(async (req, res, next) => {
-  const { interval = "daily" } = req.query;
+  const { interval = "daily", country } = req.query;
 
   const validIntervals = ["daily", "weekly", "monthly", "yearly"];
   if (!validIntervals.includes(interval)) {
@@ -441,13 +461,22 @@ exports.getCoinRevenue = catchAsyncErrors(async (req, res, next) => {
 
   const matchStage = {
     $match: {
-      country: req.user.country,
       item: "coin",
       createdAt: { $gte: startDate, $lte: endDate },
     },
   };
-  let groupStage;
 
+  // Adjust `country` filter based on user role
+  if (req.user.role === "super-admin") {
+    if (country) {
+      // Filter by specific country if provided
+      matchStage.$match.country = country;
+    }
+  } else {
+    // Restrict to the user's country for non-super-admin users
+    matchStage.$match.country = req.user.country;
+  }
+  let groupStage;
   switch (interval) {
     case "daily":
       groupStage = {
@@ -457,6 +486,7 @@ exports.getCoinRevenue = catchAsyncErrors(async (req, res, next) => {
           },
           count: { $sum: 1 },
           totalEarnings: { $sum: "$price" },
+          amount: { $sum: "$amount" },
         },
       };
       break;
@@ -469,6 +499,7 @@ exports.getCoinRevenue = catchAsyncErrors(async (req, res, next) => {
           },
           count: { $sum: 1 },
           totalEarnings: { $sum: "$price" },
+          amount: { $sum: "$amount" },
         },
       };
       break;
@@ -479,6 +510,7 @@ exports.getCoinRevenue = catchAsyncErrors(async (req, res, next) => {
           _id: { $dayOfMonth: "$createdAt" },
           count: { $sum: 1 },
           totalEarnings: { $sum: "$price" },
+          amount: { $sum: "$amount" },
         },
       };
       break;
@@ -489,6 +521,7 @@ exports.getCoinRevenue = catchAsyncErrors(async (req, res, next) => {
           _id: { $month: "$createdAt" },
           count: { $sum: 1 },
           totalEarnings: { $sum: "$price" },
+          amount: { $sum: "$amount" },
         },
       };
       break;
@@ -512,6 +545,7 @@ exports.getCoinRevenue = catchAsyncErrors(async (req, res, next) => {
                 _id: null,
                 totalCount: { $sum: "$count" },
                 totalEarnings: { $sum: "$totalEarnings" },
+                totalAmount: { $sum: "$amount" },
               },
             },
           ],
@@ -523,6 +557,7 @@ exports.getCoinRevenue = catchAsyncErrors(async (req, res, next) => {
     const totals = chartData[0]?.totals[0] || {
       totalCount: 0,
       totalEarnings: 0,
+      totalAmount: 0,
     };
 
     // Prepare response data
@@ -548,6 +583,7 @@ exports.getCoinRevenue = catchAsyncErrors(async (req, res, next) => {
             hour,
             count: data ? data.count : 0,
             totalEarnings: data ? data.totalEarnings : 0,
+            totalAmount: data ? data.totalAmount : 0,
           };
         });
         break;
@@ -563,6 +599,7 @@ exports.getCoinRevenue = catchAsyncErrors(async (req, res, next) => {
             day,
             count: data ? data.count : 0,
             totalEarnings: data ? data.totalEarnings : 0,
+            totalAmount: data ? data.totalAmount : 0,
           };
         });
         break;
@@ -581,6 +618,7 @@ exports.getCoinRevenue = catchAsyncErrors(async (req, res, next) => {
             day,
             count: data ? data.count : 0,
             totalEarnings: data ? data.totalEarnings : 0,
+            totalAmount: data ? data.totalAmount : 0,
           };
         });
         break;
@@ -607,6 +645,7 @@ exports.getCoinRevenue = catchAsyncErrors(async (req, res, next) => {
             month,
             count: data ? data.count : 0,
             totalEarnings: data ? data.totalEarnings : 0,
+            totalAmount: data ? data.totalAmount : 0,
           };
         });
         break;
@@ -624,6 +663,7 @@ exports.getCoinRevenue = catchAsyncErrors(async (req, res, next) => {
       totals: {
         totalCount: totals.totalCount,
         totalEarnings: totals.totalEarnings,
+        totalAmount: totals.totalAmount,
       },
     });
   } catch (error) {

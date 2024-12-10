@@ -7,6 +7,8 @@ const processPayment = require("../utils/processPayment");
 const path = require("path");
 const BASE_URL = "http://dev.e-pic.co/";
 const Transaction = require("../Models/transactionModal");
+const Warning = require("../Models/WarningModel");
+const sendEmail = require("../utils/sendEmail");
 //upload photo
 exports.uploadPhoto = catchAsyncErrors(async (req, res, next) => {
   const imageCount = req.files.length;
@@ -377,11 +379,11 @@ exports.getAnImage = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-// get most liked images
+// get most liked images// popular images
 exports.getMostLikedImages = catchAsyncErrors(async (req, res, next) => {
   const images = await Image.find({})
 
-    .sort({ likesCount: -1 })
+    .sort({ likesCount: -1, uploaded_at: -1 })
     .limit(10)
     .populate("owner", "name profile_pic");
   res.status(200).json({
@@ -443,6 +445,79 @@ exports.deleteImage = catchAsyncErrors(async (req, res, next) => {
   user.uploaded_images.pull(image._id);
   user.image_limit += 1;
   await image.deleteOne();
+
+  // warning
+  let warning = await Warning.findOne({ userId: user._id });
+
+  if (!warning) {
+    warning = new Warning({ userId: user._id });
+  }
+
+  warning.warnings.push({
+    message: "You got an warning for breaking image uploading rules",
+  });
+
+  warning.warningCount += 1;
+
+  if (warning.warningCount >= 3) {
+    warning.suspended = true;
+    user.isActive = false;
+  }
+
+  await warning.save();
+  //sending notification
+  const sendNotification = await AppNotification.create({
+    user: image.owner,
+    title: `Warning`,
+    message: `This is your ${
+      warning.warningCount == 0 ? "1st" : "2nd"
+    } warning. Continued violation of our rules will result in the following actions:`,
+    country: req.user.country,
+  });
+  await sendNotification.save();
+
+  //sending email
+  const message = `
+  <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
+    <div style="width: 100%; max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+        <p style="font-size: 16px; color: #333333; line-height: 1.6;">Dear  ${
+          user.name
+        },</p>
+        
+
+            We have detected that the image(s) you uploaded violates our community guidelines. Please note that E-Pic strictly prohibits the upload of inappropriate, offensive, or unauthorized content.
+
+            This is your ${
+              warning.warningCount == 0 ? "1st" : "2nd"
+            } warning. Continued violation of our rules will result in the following actions:
+
+            After the 3rd warning, your account will be permanently suspended to maintain a safe and respectful environment for all users.
+            We encourage you to review our Community Guidelines to understand what content is allowed. If you believe this warning was issued in error, please contact us at support@e-pic.co.
+
+           
+
+        <p style="font-size: 16px; color: #333333; line-height: 1.6;">
+            Thank you for your cooperation in keeping E-Pic a positive space for everyone.
+
+            — E-Pic Support Team
+        </p>
+
+      
+
+        <p style="font-size: 14px; color: #888888; margin-top: 20px; line-height: 1.6;">
+            Best regards, <br>
+            Team E-pic
+        </p>
+    </div>
+</body>
+</html>
+
+    `;
+  await sendEmail({
+    email: user.email,
+    subject: `Warning Email`,
+    message,
+  });
 
   res.status(200).send({
     success: true,

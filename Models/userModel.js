@@ -35,7 +35,7 @@ const userSchema = new Schema(
     },
     mobileNo: {
       type: String,
-      unique: true,
+      unique: [true, "Mobile number already been registered"],
       required: [true, "Please enter your mobile number"],
     },
     bio: {

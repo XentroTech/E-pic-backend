@@ -63,10 +63,9 @@ exports.getWeeklyTopSellingImages = catchAsyncErrors(async (req, res, next) => {
 // for you
 exports.getForYouImages = catchAsyncErrors(async (req, res, next) => {
   // Find the user and get their liked images with categories
-  const user = await User.findById(req.user._id).populate(
-    "liked_images",
-    "category"
-  );
+  const user = await User.findById(req.user._id)
+    .sort({ uploaded_at: -1 })
+    .populate("liked_images", "category");
 
   let images = [];
 
@@ -114,7 +113,9 @@ exports.getNewlyAddedImages = catchAsyncErrors(async (req, res, next) => {
   const images = await Image.find({
     uploaded_at: { $gte: startWeek, $lte: endWeek },
     isLive: true,
-  }).populate("owner", "name profile_pic");
+  })
+    .sort({ uploaded_at: -1 })
+    .populate("owner", "name profile_pic");
   if (!images) {
     return next(new ErrorHandler("Images not Added this week", 404));
   }
@@ -201,7 +202,8 @@ exports.getImagesOfFollowedUser = catchAsyncErrors(async (req, res, next) => {
 
   if (user.following && user.following.length > 0) {
     // User has following users
-    const users = [...new user.following.map((user) => user._id)];
+    const users = user.following.map((user) => user._id);
+    // const users = [...new user.following.map((user) => user._id)];
 
     // Fetch images from those user
     images = await Image.find({
@@ -219,7 +221,7 @@ exports.getImagesOfFollowedUser = catchAsyncErrors(async (req, res, next) => {
     statusCode: 200,
     message:
       user.liked_images.length > 0
-        ? "Successfully fetched 'For You' images"
+        ? "Successfully fetched 'Followed users ' images"
         : "Showing random images",
     images,
   });

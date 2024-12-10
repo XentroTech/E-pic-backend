@@ -24,14 +24,19 @@ exports.createGameResult = catchAsyncErrors(async (req, res, next) => {
     );
   }
 
+  // deleting image if result 0
+  if (duration <= 0) {
+    purchasedImage.isUsedForGame = true;
+    purchasedImage.played_at = new Date();
+    await req.user.save();
+  }
+
+  // not creating game result if game lost
   if (duration <= 0) {
     return res.status(400).json({
       success: false,
       message: "Game result 0",
     });
-    purchasedImage.isUsedForGame = true;
-    purchasedImage.played_at = new Date();
-    await req.user.save();
   }
 
   const newGameResult = await GameResult.create({
@@ -79,7 +84,6 @@ exports.getGameResult = catchAsyncErrors(async (req, res, next) => {
   if (!gameResult) {
     return next(new ErrorHandler("Game Result Not Found!", 404));
   }
-
   res.status(200).json({
     success: true,
     message: "Game result successfully Fetched",

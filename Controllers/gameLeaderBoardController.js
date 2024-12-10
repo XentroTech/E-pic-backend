@@ -4,7 +4,6 @@ const ErrorHandler = require("../utils/errorHandler");
 
 exports.getGameLeaderBoard = catchAsyncErrors(async (req, res, next) => {
   let { date } = req.body;
-
   // If no date is provided, use today's date
   if (!date) {
     const today = new Date();

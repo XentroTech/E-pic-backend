@@ -19,6 +19,7 @@ exports.issueWarning = catchAsyncErrors(async (req, res) => {
     if (warning.warningCount >= 3) {
       warning.suspended = true;
     }
+    // to do-- deactivation
 
     await warning.save();
     res.status(200).json({ message: "Warning issued successfully", warning });

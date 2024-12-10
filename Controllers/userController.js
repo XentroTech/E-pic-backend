@@ -404,7 +404,7 @@ exports.updatePassword = catchAsyncErrors(async (req, res, next) => {
 
   // Password validation
   const validatePassword = (password) => {
-    const re = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+    const re = /^(?=.*\d)(?=.*[!@#$%^&*_])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
     return re.test(password);
   };
 
