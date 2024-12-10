@@ -1,1 +1,51 @@
 
+const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
+const ErrorHandler = require("../utils/errorHandler");
+const GameLeaderBoard = require("../models/GameLeaderBoard");
+
+exports.updateGameLeaderBoard = catchAsyncErrors(async (req, res, next) => {
+  const today = new Date();
+
+  // Calculate the start and end times of the last game cycle
+  const endOfGameCycle = new Date(
+    Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 21, 0, 0) // 9 PM today in UTC
+  );
+
+  // If the current time is before 9 PM, adjust to the previous day
+  if (today < endOfGameCycle) {
+    endOfGameCycle.setUTCDate(endOfGameCycle.getUTCDate() - 1);
+  }
+
+  const startOfGameCycle = new Date(endOfGameCycle);
+  startOfGameCycle.setUTCDate(startOfGameCycle.getUTCDate() - 1); // Start of the cycle: 9 PM previous day
+
+  try {
+    const leaderBoard = await GameLeaderBoard.find({
+      date: {
+        $gte: startOfGameCycle,
+        $lt: endOfGameCycle,
+      },
+      country: req.user.country, // Filter by country if needed
+    })
+      .populate("user", "name profile_pic")
+      .sort({ duration: 1 }) // Assuming "duration" determines the leaderboard ranking
+      .limit(10);
+
+    if (!leaderBoard || leaderBoard.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `No leaderboard results found for the game cycle ${startOfGameCycle.toISOString()} to ${endOfGameCycle.toISOString()}.`,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Leaderboard results for the game cycle ${startOfGameCycle.toISOString()} to ${endOfGameCycle.toISOString()}.`,
+      leaderBoard,
+    });
+  } catch (error) {
+    return next(
+      new ErrorHandler("An error occurred while updating the leaderboard.", 500)
+    );
+  }
+});
