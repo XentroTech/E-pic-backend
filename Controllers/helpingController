@@ -49,3 +49,23 @@ exports.updateGameLeaderBoard = catchAsyncErrors(async (req, res, next) => {
     );
   }
 });
+
+
+///   // Construct match stage for aggregation
+  const matchStage = {
+    $match: {
+      item: "image",
+      createdAt: { $gte: startDate, $lte: endDate },
+    },
+  };
+
+  // Adjust `country` filter based on user role
+  if (req.user.role === "super-admin") {
+    if (country) {
+      // Filter by specific country if provided
+      matchStage.$match.country = country;
+    }
+  } else {
+    // Restrict to the user's country for non-super-admin users
+    matchStage.$match.country = req.user.country;
+  }
