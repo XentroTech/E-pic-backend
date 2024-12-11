@@ -5,5 +5,5 @@ const {
 } = require("../Controllers/gameLeaderBoardController");
 const router = express.Router();
 
-router.post("/game/leaderBoard", isAuthenticated, getGameLeaderBoard);
+router.get("/game/leaderBoard", isAuthenticated, getGameLeaderBoard);
 module.exports = router;
