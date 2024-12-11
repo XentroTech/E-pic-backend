@@ -32,6 +32,7 @@ const transaction = require("./Routes/transactionRoutes");
 const conConversion = require("./Routes/coinConversionRoutes");
 const searchbarTitle = require("./Routes/searchbarTitleRoutes");
 const pushNotification = require("./Routes/pushNotificaitonRoutes");
+const adReward = require("./Routes/adRoutes");
 
 // const swaggerUi = require("swagger-ui-express");
 // const swaggerDocs = require("./swagger");
@@ -111,6 +112,7 @@ app.use("/api/v1/", transaction);
 app.use("/api/v1/", conConversion);
 app.use("/api/v1/", searchbarTitle);
 app.use("/api/v1/", pushNotification);
+app.use("/api/v1/", adReward);
 
 // Error middleware
 app.use(errorMiddleware);

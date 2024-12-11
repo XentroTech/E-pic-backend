@@ -80,6 +80,7 @@ const userSchema = new Schema(
     following: [
       { type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] },
     ],
+    adDetails: [{ adCount: { type: Number }, awardedCoin: { type: Number } }],
     fcmToken: { type: String },
     isActive: { type: Boolean, default: true },
     resetPasswordOtp: { type: String },

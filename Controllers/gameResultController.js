@@ -5,7 +5,7 @@ const ErrorHandler = require("../utils/errorHandler");
 const GameLeaderBoard = require("../Models/gameLeaderBoardModel");
 
 exports.createGameResult = catchAsyncErrors(async (req, res, next) => {
-  const { imageId, duration } = req.body;
+  let { imageId, duration } = req.body;
 
   const image = await Image.findById(imageId);
   if (!image) {
@@ -38,11 +38,18 @@ exports.createGameResult = catchAsyncErrors(async (req, res, next) => {
       message: "Game result 0",
     });
   }
+  let parsedDuration = duration;
+  // convert int to float if it was an int
+  if (Number.isInteger(duration)) {
+    parsedDuration = parseFloat(duration.toFixed(2));
+  }
+
+  console.log(parsedDuration);
 
   const newGameResult = await GameResult.create({
     userId: req.user._id,
     imageId,
-    duration,
+    duration: parsedDuration,
     country: req.user.country,
   });
 
