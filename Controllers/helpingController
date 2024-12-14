@@ -1,71 +1,71 @@
+const express = require("express");
+const mongoose = require("mongoose");
+const Transaction = require("../models/Transaction");
+const User = require("../models/User");
 
-const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
-const ErrorHandler = require("../utils/errorHandler");
-const GameLeaderBoard = require("../models/GameLeaderBoard");
+const router = express.Router();
 
-exports.updateGameLeaderBoard = catchAsyncErrors(async (req, res, next) => {
-  const today = new Date();
-
-  // Calculate the start and end times of the last game cycle
-  const endOfGameCycle = new Date(
-    Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 21, 0, 0) // 9 PM today in UTC
-  );
-
-  // If the current time is before 9 PM, adjust to the previous day
-  if (today < endOfGameCycle) {
-    endOfGameCycle.setUTCDate(endOfGameCycle.getUTCDate() - 1);
-  }
-
-  const startOfGameCycle = new Date(endOfGameCycle);
-  startOfGameCycle.setUTCDate(startOfGameCycle.getUTCDate() - 1); // Start of the cycle: 9 PM previous day
+// API to fetch a user's transaction summary
+router.get("/user-transactions/:userId", async (req, res) => {
+  const { userId } = req.params;
 
   try {
-    const leaderBoard = await GameLeaderBoard.find({
-      date: {
-        $gte: startOfGameCycle,
-        $lt: endOfGameCycle,
-      },
-      country: req.user.country, // Filter by country if needed
-    })
-      .populate("user", "name profile_pic")
-      .sort({ duration: 1 }) // Assuming "duration" determines the leaderboard ranking
-      .limit(10);
-
-    if (!leaderBoard || leaderBoard.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: `No leaderboard results found for the game cycle ${startOfGameCycle.toISOString()} to ${endOfGameCycle.toISOString()}.`,
-      });
+    // Check if user exists
+    const userExists = await User.findById(userId);
+    if (!userExists) {
+      return res.status(404).json({ error: "User not found" });
     }
 
-    res.status(200).json({
-      success: true,
-      message: `Leaderboard results for the game cycle ${startOfGameCycle.toISOString()} to ${endOfGameCycle.toISOString()}.`,
-      leaderBoard,
+    // Aggregate the user's transaction data
+    const transactions = await Transaction.aggregate([
+      { $match: { user: user._id, type: "purchase" } },
+      {
+        $group: {
+          _id: "$item",
+          totalAmount: { $sum: "$amount" }, 
+          totalPrice: { $sum: "$price" },  
+        },
+      },
+    ]);
+
+    // Structure the response data
+    const result = {
+      userId,
+      transactions: {
+        coins: {
+          totalAmount: 0,
+          totalPrice: 0,
+        },
+        images: {
+          totalAmount: 0,
+          totalPrice: 0,
+        },
+        space: {
+          totalAmount: 0,
+          totalPrice: 0,
+        },
+      },
+    };
+
+    // Map aggregated data to response format
+    transactions.forEach((item) => {
+      if (item._id === "coin") {
+        result.transactions.coins.totalAmount = item.totalAmount;
+        result.transactions.coins.totalPrice = item.totalPrice;
+      } else if (item._id === "image") {
+        result.transactions.images.totalAmount = item.totalAmount;
+        result.transactions.images.totalPrice = item.totalPrice;
+      } else if (item._id === "space") {
+        result.transactions.space.totalAmount = item.totalAmount;
+        result.transactions.space.totalPrice = item.totalPrice;
+      }
     });
+
+    res.status(200).json(result);
   } catch (error) {
-    return next(
-      new ErrorHandler("An error occurred while updating the leaderboard.", 500)
-    );
+    console.error("Error fetching transactions:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
-
-///   // Construct match stage for aggregation
-  const matchStage = {
-    $match: {
-      item: "image",
-      createdAt: { $gte: startDate, $lte: endDate },
-    },
-  };
-
-  // Adjust `country` filter based on user role
-  if (req.user.role === "super-admin") {
-    if (country) {
-      // Filter by specific country if provided
-      matchStage.$match.country = country;
-    }
-  } else {
-    // Restrict to the user's country for non-super-admin users
-    matchStage.$match.country = req.user.country;
-  }
+module.exports = router;
