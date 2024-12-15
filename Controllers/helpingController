@@ -111,3 +111,21 @@ exports.nonWithdreableCoins(catchAsyncError( async (req, res) => {
 
 module.exports = router;
 
+
+// accourate hour
+const allHours = Array.from({ length: 24 }, (_, i) => {
+  const hour = i === 0 ? 12 : i % 12; 
+  const period = i < 12 ? "AM" : "PM"; 
+  return `${hour} ${period}`;
+});
+
+const formattedData = allHours.map((hour, index) => {
+  const data = intervalData.find((item) => parseInt(item._id.split(":")[0], 10) === index); // Match with 24-hour index
+  return {
+    hour, // 12-hour format string
+    count: data ? data.count : 0,
+    totalEarnings: data ? data.totalEarnings : 0,
+  };
+});
+
+
