@@ -15,7 +15,7 @@ const {
   getPendingImages,
   getLiveImages,
 } = require("../Controllers/imageController");
-const { isAuthenticated } = require("../middlewares/Auth");
+const { isAuthenticated, authorizeRoles } = require("../middlewares/Auth");
 
 const router = express.Router();
 
@@ -28,7 +28,8 @@ router.get("/image/live", isAuthenticated, getLiveImages);
 //get user's gallery images
 router.get("/image/marketPlace", isAuthenticated, getUserMarketPlaceImages);
 //get mostLiked images
-router.get("/image/mostLiked", getMostLikedImages);
+router.get("/image/mostLiked", isAuthenticated, getMostLikedImages);
+// get an image
 router.get("/image/:id", isAuthenticated, getAnImage);
 // approve image
 router.patch("/image/approveImage/:id", isAuthenticated, approveImage);
@@ -43,7 +44,12 @@ router.post(
 // update image info
 router.patch("/image/update/:id", isAuthenticated, updateImage);
 //delete image
-router.delete("/image/delete/:id", isAuthenticated, deleteImage);
+router.delete(
+  "/image/delete/:id",
+  // authorizeRoles("admin", "superadmin"),
+  isAuthenticated,
+  deleteImage
+);
 
 router.post("/image/like/:id", isAuthenticated, likeImage);
 //purchase image

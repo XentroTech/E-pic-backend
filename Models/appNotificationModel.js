@@ -8,6 +8,7 @@ const appNotificationSchema = new Schema({
   isSeen: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now() },
   country: { type: String, required: true },
+  senderImage: { type: String, default: "" },
 });
 
 const AppNotification = mongoose.model(

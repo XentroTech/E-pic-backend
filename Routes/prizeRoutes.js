@@ -10,11 +10,13 @@ const {
 } = require("../Controllers/prizeController");
 const upload = require("../middlewares/upload");
 const router = express.Router();
+
 //create prize
 router.post(
   "/prize",
   upload.fields([{ name: "image_url", maxCount: 1 }]),
   isAuthenticated,
+  authorizeRoles("admin", "superadmin"),
   // authorizeRoles("admin, superadmin"),
   createPrizeInfo
 );
@@ -25,26 +27,26 @@ router.patch(
   "/prize/:id",
   upload.fields([{ name: "image_url", maxCount: 1 }]),
   isAuthenticated,
-  // authorizeRoles("admin, superadmin"),
+  // authorizeRoles("admin", "superadmin"),
   updatePrizeInfo
 );
 //delete prizes
 router.delete(
   "/prize/:id",
   isAuthenticated,
-  // authorizeRoles("admin, superadmin"),
+  // authorizeRoles("admin", "superadmin"),
   deletePrizeInfo
 );
 router.get(
   "/prize/winners",
   isAuthenticated,
-  // authorizeRoles("admin, superadmin"),
+  // authorizeRoles("admin", "superadmin"),
   getWinnersInfo
 );
 router.post(
   "/prize/distribute",
   isAuthenticated,
-  // authorizeRoles("admin, superadmin"),
+  // authorizeRoles("admin", "superadmin"),
   distributePrizes
 );
 

@@ -1,5 +1,5 @@
 const express = require("express");
-const { isAuthenticated } = require("../middlewares/Auth");
+const { isAuthenticated, authorizeRoles } = require("../middlewares/Auth");
 
 const {
   createCoinInfo,
@@ -12,10 +12,25 @@ const { checkPromoExpiration } = require("../middlewares/checkPromoExpiration");
 
 const router = express.Router();
 
-router.post("/coin", isAuthenticated, createCoinInfo);
+router.post(
+  "/coin",
+  // authorizeRoles("admin", "superadmin"),
+  isAuthenticated,
+  createCoinInfo
+);
 router.get("/coin", isAuthenticated, getCoinInfo);
-router.patch("/coin/:id", isAuthenticated, updateCoinInfo);
-router.delete("/coin/:id", isAuthenticated, deleteCoinInfo);
+router.patch(
+  "/coin/:id",
+  // authorizeRoles("admin", "superadmin"),
+  isAuthenticated,
+  updateCoinInfo
+);
+router.delete(
+  "/coin/:id",
+  // authorizeRoles("admin", "superadmin"),
+  isAuthenticated,
+  deleteCoinInfo
+);
 router.post(
   "/coin/purchase",
   isAuthenticated,

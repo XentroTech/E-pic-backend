@@ -5,6 +5,7 @@ const ErrorHandler = require("../utils/errorHandler");
 //create title
 exports.createTitle = catchAsyncErrors(async (req, res, next) => {
   const { title } = req.body;
+  console.log(title);
   if (!title) {
     return next(new ErrorHandler("please provide title", 400));
   }
@@ -34,23 +35,22 @@ exports.getTitle = catchAsyncErrors(async (req, res, next) => {
 
 //update title
 exports.updateTitle = catchAsyncErrors(async (req, res, next) => {
-  const { id } = req.params;
-  const title = await SearchBarTitle.findByIdAndUpdate(
-    id,
-    { ...req.body },
-    {
-      new: true,
-      runValidators: true,
-    }
-  );
-  if (!title) {
+  const titleToUpdate = await SearchBarTitle.findOne({ _id: req.params.id });
+  if (!titleToUpdate) {
     return next(new ErrorHandler("title not found", 404));
   }
+  const { data } = req.body;
+  const updatedTitle = await SearchBarTitle.findByIdAndUpdate(
+    req.params.id,
+    { title: data },
+    { new: true, runValidators: true }
+  );
+  console.log("updated", updatedTitle);
 
   res.status(200).json({
     success: true,
     message: "Title has been updated",
-    title,
+    updatedTitle,
   });
 });
 

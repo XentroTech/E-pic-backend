@@ -1,5 +1,5 @@
 const express = require("express");
-const { isAuthenticated } = require("../middlewares/Auth");
+const { isAuthenticated, authorizeRoles } = require("../middlewares/Auth");
 const {
   getTopSellers,
   getBestSellingImages,
@@ -30,6 +30,7 @@ router.get("/search", isAuthenticated, search);
 router.post(
   "/featured/:imageId",
   isAuthenticated,
+  // authorizeRoles("admin", "superadmin"),
   makeFeaturedAndRemoveFeaturedImage
 );
 

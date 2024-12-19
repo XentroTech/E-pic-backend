@@ -11,7 +11,6 @@ const getDateRange = require("../utils/getDateRange");
 
 exports.getImageRevenue = catchAsyncErrors(async (req, res, next) => {
   const { interval = "daily", country } = req.query;
-  console.log(interval, country);
   const validIntervals = ["daily", "weekly", "monthly", "yearly"];
   if (!validIntervals.includes(interval)) {
     return next(new ErrorHandler("Invalid interval provided", 400));
@@ -30,7 +29,7 @@ exports.getImageRevenue = catchAsyncErrors(async (req, res, next) => {
   };
 
   // Adjust `country` filter based on user role
-  if (req.user.role === "super-admin") {
+  if (req.user.role === "superadmin") {
     if (country) {
       // Filter by specific country if provided
       matchStage.$match.country = country;
@@ -249,7 +248,7 @@ exports.getSpaceRevenue = catchAsyncErrors(async (req, res, next) => {
   };
 
   // Adjust `country` filter based on user role
-  if (req.user.role === "super-admin") {
+  if (req.user.role === "superadmin") {
     if (country) {
       // Filter by specific country if provided
       matchStage.$match.country = country;
@@ -446,7 +445,6 @@ exports.getSpaceRevenue = catchAsyncErrors(async (req, res, next) => {
 //coin revenue
 exports.getCoinRevenue = catchAsyncErrors(async (req, res, next) => {
   const { interval = "daily", country } = req.query;
-
   const validIntervals = ["daily", "weekly", "monthly", "yearly"];
   if (!validIntervals.includes(interval)) {
     return next(new ErrorHandler("Invalid interval provided", 400));
@@ -467,7 +465,7 @@ exports.getCoinRevenue = catchAsyncErrors(async (req, res, next) => {
   };
 
   // Adjust `country` filter based on user role
-  if (req.user.role === "super-admin") {
+  if (req.user.role === "superadmin") {
     if (country) {
       // Filter by specific country if provided
       matchStage.$match.country = country;
@@ -564,26 +562,42 @@ exports.getCoinRevenue = catchAsyncErrors(async (req, res, next) => {
     let formattedData;
     switch (interval) {
       case "daily": {
-        const allHours = Array.from(
-          { length: 12 },
-          (_, i) => `${i === 0 ? 12 : i} AM`
-        ).concat(
-          Array.from({ length: 12 }, (_, i) => `${i === 0 ? 12 : i} PM`)
-        );
+        // const allHours = Array.from(
+        //   { length: 12 },
+        //   (_, i) => `${i === 0 ? 12 : i} AM`
+        // ).concat(
+        //   Array.from({ length: 12 }, (_, i) => `${i === 0 ? 12 : i} PM`)
+        // );
+
+        // formattedData = allHours.map((hour, index) => {
+        //   const data = intervalData.find((item) => {
+        //     const hourInt = parseInt(item._id.split(":")[0], 10);
+        //     return (
+        //       hourInt ===
+        //       (index === 0 ? 12 : index % 12) + (index >= 12 ? 12 : 0)
+        //     );
+        //   });
+        //   return {
+        //     hour,
+        //     count: data ? data.count : 0,
+        //     totalEarnings: data ? data.totalEarnings : 0,
+        //     totalAmount: data ? data.totalAmount : 0,
+        //   };
+        // });
+        const allHours = Array.from({ length: 24 }, (_, i) => {
+          const hour = i === 0 ? 12 : i % 12;
+          const period = i < 12 ? "AM" : "PM";
+          return `${hour} ${period}`;
+        });
 
         formattedData = allHours.map((hour, index) => {
-          const data = intervalData.find((item) => {
-            const hourInt = parseInt(item._id.split(":")[0], 10);
-            return (
-              hourInt ===
-              (index === 0 ? 12 : index % 12) + (index >= 12 ? 12 : 0)
-            );
-          });
+          const data = intervalData.find(
+            (item) => parseInt(item._id.split(":")[0], 10) === index
+          );
           return {
             hour,
             count: data ? data.count : 0,
             totalEarnings: data ? data.totalEarnings : 0,
-            totalAmount: data ? data.totalAmount : 0,
           };
         });
         break;

@@ -33,6 +33,7 @@ const conConversion = require("./Routes/coinConversionRoutes");
 const searchbarTitle = require("./Routes/searchbarTitleRoutes");
 const pushNotification = require("./Routes/pushNotificaitonRoutes");
 const adReward = require("./Routes/adRoutes");
+const welcomeScreen = require("./Routes/welcomeScreenRoutes");
 
 // const swaggerUi = require("swagger-ui-express");
 // const swaggerDocs = require("./swagger");
@@ -44,25 +45,21 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// initialize firebase admin
 require("dotenv").config();
 
-// admin.initializeApp({
-//   credential: admin.credential.cert({
-//     projectId: process.env.FIREBASE_PROJECT_ID,
-//     privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-//     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-//   }),
-// });
-
 const serviceAccount = require("./config/service-account-file.json");
-
+// initialize firebase admin
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
+
 app.use(express.json());
 app.use("/uploads", express.static(uploadPath));
 
+app.use(
+  "/api/v1/.well-known",
+  express.static(path.join(__dirname, ".well-known"))
+);
 // Middlewares
 const corsOptions = {
   origin: [
@@ -113,6 +110,7 @@ app.use("/api/v1/", conConversion);
 app.use("/api/v1/", searchbarTitle);
 app.use("/api/v1/", pushNotification);
 app.use("/api/v1/", adReward);
+app.use("/api/v1/", welcomeScreen);
 
 // Error middleware
 app.use(errorMiddleware);

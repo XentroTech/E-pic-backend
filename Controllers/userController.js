@@ -8,8 +8,9 @@ const processPayment = require("../utils/processPayment.js");
 const crypto = require("crypto");
 const { validationResult } = require("express-validator");
 const Image = require("../Models/imageModel.js");
+const Transaction = require("../Models/transactionModal.js");
 const AppNotification = require("../Models/appNotificationModel.js");
-const BASE_URL = "http://dev.e-pic.co/";
+const BASE_URL = "https://dev.e-pic.co/";
 
 //register
 exports.register = catchAsyncErrors(async (req, res, next) => {
@@ -53,6 +54,7 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
         title: `Referral Bonus notification`,
         message: `Congratulations you got referral bonus ${referralBonus} for referring ${name}`,
         country: country,
+        senderImage: "",
       });
       await sendNotification.save();
     } else {
@@ -96,15 +98,17 @@ exports.login = catchAsyncErrors(async (req, res, next) => {
       new ErrorHandler("Please enter email or mobile no & password", 401)
     );
   }
+  console.log(mobileNo);
 
   const user = await User.findOne({
     $or: [{ email: email }, { mobileNo: mobileNo }],
   }).select("+password");
-
+  // if user not found
+  if (!user) {
+    return next(new ErrorHandler("Invalid email or password", 401));
+  }
   // updating fcm token
   if (fcmToken) {
-    console.log(fcmToken);
-    console.lo;
     const updateFcmToken = await User.findByIdAndUpdate(
       user._id,
       { fcmToken },
@@ -121,9 +125,6 @@ exports.login = catchAsyncErrors(async (req, res, next) => {
         403
       )
     );
-  }
-  if (!user) {
-    return next(new ErrorHandler("Invalid email or password", 401));
   }
 
   const isPasswordMatched = await user.comparePassword(password);
@@ -173,7 +174,7 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
         <p style="font-size: 24px; color: #00674F; font-weight: bold; margin: 20px 0;">${resetPasswordOtp}</p>
 
         <p style="font-size: 16px; color: #333333; line-height: 1.6;">
-            This OTP is valid for only 5 minutes. If you did not request a password reset, please ignore this email and your account will remain secure.
+            This OTP is valid for only 5 minutes. If you did not request a password reset, please contact with e-pic support.
         </p>
 
         <p style="font-size: 14px; color: #888888; margin-top: 20px; line-height: 1.6;">
@@ -275,11 +276,10 @@ exports.getUsers = catchAsyncErrors(async (req, res) => {
     page = 1,
     limit = 10,
     role = null,
-    country = null,
+    country = "MY",
   } = req.query;
   const requestingUserRole = req.user ? req.user.role : null;
   let searchCriteria = [];
-
   // If the user is an admin, exclude superadmins and admins from the results
   if (requestingUserRole === "superadmin") {
     // no search criteria will be allowed
@@ -315,7 +315,9 @@ exports.getUsers = catchAsyncErrors(async (req, res) => {
     searchCriteria.length > 0 ? { $and: searchCriteria } : {};
 
   // Get the total count of users matching the search criteria
-  const totalUsers = await User.countDocuments(finalCriteria);
+  const totalUsers = await User.countDocuments({});
+  //get user role to show role wise count
+  const userRole = await User.find().select("role");
 
   // Find users with pagination
   const users = await User.find(finalCriteria)
@@ -333,6 +335,7 @@ exports.getUsers = catchAsyncErrors(async (req, res) => {
     currentPage: page,
     totalPages: Math.ceil(totalUsers / limit),
     users,
+    userRole,
   });
 });
 
@@ -544,7 +547,21 @@ exports.activeOrDeactivateUser = catchAsyncErrors(async (req, res, next) => {
   res.status(200).send({
     success: true,
     userId,
+    date,
     message: `User ${user.isActive ? "Activate" : "Deactivated"} Successful!`,
+  });
+});
+
+//get inactive user
+exports.getInactiveUser = catchAsyncErrors(async (req, res, next) => {
+  const users = await User.find({ isActive: false });
+  if (!users) {
+    return next(new ErrorHandler("User not found", 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    users,
   });
 });
 
@@ -605,6 +622,7 @@ exports.followUser = catchAsyncErrors(async (req, res, next) => {
       title: `${req.user.name} `,
       message: `following you`,
       country: req.user.country,
+      senderImage: `${req.user.profile_pic}`,
     });
     await sendNotification.save();
   }
@@ -699,4 +717,76 @@ exports.getReferralBonusDetails = catchAsyncErrors(async (req, res, next) => {
       new ErrorHandler("Failed to fetch referral bonus details", 500)
     );
   }
+});
+
+// get user transaction details
+exports.getUserTransactionDetails = catchAsyncErrors(async (req, res) => {
+  const { id } = req.params;
+
+  const userExists = await User.findById(id);
+  if (!userExists) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const images = await Image.find({ owner: userExists._id });
+  console.log(images);
+  const soldImages = await Image.aggregate([
+    { $match: { user: userExists._id } },
+    {
+      $group: {
+        _id: sold_details,
+        imageSold: { $sum: 1 },
+        totalEarnings: { $sum: $price },
+      },
+    },
+  ]);
+  console.log(userExists._id);
+  console.log(soldImages);
+  const transactions = await Transaction.aggregate([
+    { $match: { user: userExists._id, type: "purchase" } },
+    {
+      $group: {
+        _id: "$item",
+        totalAmount: { $sum: "$amount" },
+        totalPrice: { $sum: "$price" },
+      },
+    },
+  ]);
+  // Structure the response data
+  const result = {
+    id,
+    transactions: {
+      coins: {
+        totalAmount: 0,
+        totalPrice: 0,
+      },
+      images: {
+        totalAmount: 0,
+        totalPrice: 0,
+      },
+      space: {
+        totalAmount: 0,
+        totalPrice: 0,
+      },
+    },
+  };
+
+  // Map aggregated data to response format
+  transactions.forEach((item) => {
+    if (item._id === "coin") {
+      result.transactions.coins.totalAmount = item.totalAmount;
+      result.transactions.coins.totalPrice = item.totalPrice;
+    } else if (item._id === "image") {
+      result.transactions.images.totalAmount = item.totalAmount;
+      result.transactions.images.totalPrice = item.totalPrice;
+    } else if (item._id === "space") {
+      result.transactions.space.totalAmount = item.totalAmount;
+      result.transactions.space.totalPrice = item.totalPrice;
+    }
+  });
+
+  res.status(200).json({
+    success: true,
+    result,
+  });
 });

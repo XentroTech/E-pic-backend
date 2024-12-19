@@ -2,11 +2,11 @@
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const Sponsorship = require("../Models/sponsorshipModel");
 
-const BASE_URL = "http://dev.e-pic.co/";
+const BASE_URL = "https://dev.e-pic.co/";
 // create sponsor
 exports.createSponsorship = catchAsyncErrors(async (req, res) => {
   const { brandName, adLocation, startDate, endDate } = req.body;
-
+  console.log(req.body);
   if (!brandName || !adLocation || !startDate || !endDate) {
     return res.status(400).json({
       success: false,

@@ -1,5 +1,5 @@
 const express = require("express");
-const { isAuthenticated } = require("../middlewares/Auth");
+const { isAuthenticated, authorizeRoles } = require("../middlewares/Auth");
 const {
   createDeleteAccountRequest,
   getUserDeleteRequest,
@@ -17,11 +17,13 @@ router.post(
 router.get(
   "/delete/account/all-request",
   isAuthenticated,
+  // authorizeRoles("admin", "superadmin"),
   getUserDeleteRequest
 );
 router.delete(
   "/delete/account/approve/:id",
   isAuthenticated,
+  // authorizeRoles("admin", "superadmin"),
   approveDeleteAccountRequest
 );
 router.post("/delete/account/decline/:id", isAuthenticated, declineRequest);

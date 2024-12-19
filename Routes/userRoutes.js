@@ -21,6 +21,8 @@ const {
   get_purchased_images,
   getReferralBonusDetails,
   updatePassword,
+  getUserTransactionDetails,
+  getInactiveUser,
 } = require("../Controllers/userController");
 const { loginValidator } = require("../middlewares/loginValidator");
 const { registerValidator } = require("../middlewares/registerValidator");
@@ -96,4 +98,12 @@ router.post(
 //get purchased images
 router.get("/user/purchasedImages/:id", isAuthenticated, getPurchasedImages);
 
+// user transaction details
+router.get(
+  "/user/transactions/:id",
+  isAuthenticated,
+  getUserTransactionDetails
+);
+// get inactive user
+router.get("/user/inactive", isAuthenticated, getInactiveUser);
 module.exports = router;

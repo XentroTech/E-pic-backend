@@ -128,3 +128,32 @@ exports.purchaseCoin = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Payment not successful", 401));
   }
 });
+
+//non withdrawable coins
+exports.nonWithdrawableCoins = catchAsyncErrors(async (req, res) => {
+  const { userId } = req.params;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    return next(new ErrorHandler("user not found", 404));
+  }
+
+  const totalReferralBonus = user.referred_users_details.reduce(
+    (sum, referral) => sum + referral.referralBonus,
+    0
+  );
+
+  const totalAdAwardedCoins = user.adDetails.reduce(
+    (sum, ad) => sum + (ad.awardedCoin || 0),
+    0
+  );
+
+  const totalNonWithdrawableCoins = totalReferralBonus + totalAdAwardedCoins;
+
+  res.status(200).json({
+    userId,
+    totalReferralBonus,
+    totalAdAwardedCoins,
+    totalNonWithdrawableCoins,
+  });
+});

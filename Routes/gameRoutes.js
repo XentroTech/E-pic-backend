@@ -1,5 +1,5 @@
 const express = require("express");
-const { isAuthenticated } = require("../middlewares/Auth");
+const { isAuthenticated, authorizeRoles } = require("../middlewares/Auth");
 const {
   createGameTime,
   getGameTime,
@@ -11,10 +11,30 @@ const {
 } = require("../Controllers/gameLeaderBoardController");
 const router = express.Router();
 
-router.post("/game/createTime", isAuthenticated, createGameTime);
-router.get("/game/getTime", isAuthenticated, getGameTime);
-router.patch("/game/update/:id", isAuthenticated, updateGameTime);
-router.delete("/game/delete/:id", isAuthenticated, deleteGameTime);
+router.post(
+  "/game/createTime",
+  // authorizeRoles("admin", "superadmin", "moderator"),
+  isAuthenticated,
+  createGameTime
+);
+router.get(
+  "/game/getTime",
+  // authorizeRoles("admin", "superadmin", "moderator"),
+  isAuthenticated,
+  getGameTime
+);
+router.patch(
+  "/game/update/:id",
+  isAuthenticated,
+  // authorizeRoles("admin", "superadmin", "moderator"),
+  updateGameTime
+);
+router.delete(
+  "/game/delete/:id",
+  isAuthenticated,
+  // authorizeRoles("admin", "superadmin", "moderator"),
+  deleteGameTime
+);
 // router.get("/game/leaderBoard", isAuthenticated, getGameLeaderBoard);
 
 module.exports = router;

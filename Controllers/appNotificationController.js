@@ -5,7 +5,7 @@ const ErrorHandler = require("../utils/errorHandler");
 
 // send notification to users
 exports.sendNotification = catchAsyncErrors(async (req, res, next) => {
-  const { title, message } = req.body;
+  const { title, message, image } = req.body;
   if (!title || !message) {
     return next(new ErrorHandler("Please provide title and message", 400));
   }
@@ -19,6 +19,7 @@ exports.sendNotification = catchAsyncErrors(async (req, res, next) => {
       title: title,
       message: message,
       country: req.user.country,
+      senderImage: `${image ? image : req.user.profile_pic}`,
     });
   });
 
@@ -29,7 +30,7 @@ exports.sendNotification = catchAsyncErrors(async (req, res, next) => {
 });
 //get all notifications
 exports.getAllNotification = catchAsyncErrors(async (req, res, next) => {
-  const notifications = await AppNotification.find({});
+  const notifications = await AppNotification.find({ createdAt: -1 });
   if (!notifications) {
     return next(new ErrorHandler("Notification not found", 404));
   }

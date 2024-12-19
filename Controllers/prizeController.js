@@ -6,7 +6,7 @@ const GameLeaderBoard = require("../Models/gameLeaderBoardModel");
 const Competition = require("../Models/competitionModel");
 const AppNotification = require("../Models/appNotificationModel");
 //create prize info
-const BASE_URL = "http://dev.e-pic.co/";
+const BASE_URL = "https://dev.e-pic.co/";
 
 exports.createPrizeInfo = catchAsyncErrors(async (req, res, next) => {
   let { type, name, rank, value, image_url, position, price } = req.body;
@@ -76,7 +76,7 @@ exports.getPrizeInfo = catchAsyncErrors(async (req, res, next) => {
 exports.updatePrizeInfo = catchAsyncErrors(async (req, res, next) => {
   const { id } = req.params;
   const prizeInfo = await Prize.findById(id);
-
+  console.log(req.body);
   if (!prizeInfo) {
     return next(new ErrorHandler("Prize Info not found!", 404));
   }
@@ -243,6 +243,7 @@ exports.distributePrizes = catchAsyncErrors(async (req, res, next) => {
         title: "Game prize",
         message: `Congratulations! You have won a ${prize.name}. It will be sent to you via courier shortly.`,
         country: req.user.country,
+        senderImage: "",
       });
 
       prizeDistribution.push({
@@ -262,6 +263,7 @@ exports.distributePrizes = catchAsyncErrors(async (req, res, next) => {
         title: "Game Prize",
         message: `Congratulations! You have won ${prize.value} coins. They have been added to your wallet.`,
         country: req.user.country,
+        senderImage: "",
       });
 
       prizeDistribution.push({

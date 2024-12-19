@@ -1,5 +1,5 @@
 const express = require("express");
-const { isAuthenticated } = require("../middlewares/Auth");
+const { isAuthenticated, authorizeRoles } = require("../middlewares/Auth");
 const {
   createCoinConversion,
   getCoinConversionInfo,
@@ -8,10 +8,16 @@ const {
 
 const router = express.Router();
 
-router.post("/coinConversion", isAuthenticated, createCoinConversion);
+router.post(
+  "/coinConversion",
+  // authorizeRoles("admin", "superadmin"),
+  isAuthenticated,
+  createCoinConversion
+);
 router.get("/coinConversion", isAuthenticated, getCoinConversionInfo);
 router.delete(
   "/coinConversion/delete",
+  // authorizeRoles("admin", "superadmin"),
   isAuthenticated,
   deleteCoinConversionInfo
 );

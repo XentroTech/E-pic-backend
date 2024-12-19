@@ -5,7 +5,7 @@ const ErrorHandler = require("../utils/errorHandler");
 
 //get Top sellers
 exports.getTopSellers = catchAsyncErrors(async (req, res, next) => {
-  const topSellers = await User.find({})
+  const topSellers = await User.find({ country: req.user.country })
     .sort({ total_sales: -1 })
     .limit(10)
     .select("name profile_pic");
@@ -18,7 +18,7 @@ exports.getTopSellers = catchAsyncErrors(async (req, res, next) => {
 
 // get best selling images
 exports.getBestSellingImages = catchAsyncErrors(async (req, res, next) => {
-  const images = await Image.find({})
+  const images = await Image.find({ country: req.user.country })
     .sort({ sold_count: -1 })
     .limit(10)
     .populate("owner", "name profile_pic");
@@ -45,6 +45,7 @@ exports.getWeeklyTopSellingImages = catchAsyncErrors(async (req, res, next) => {
   const images = await Image.find({
     uploaded_at: { $gte: startWeek, $lte: endWeek },
     isLive: true,
+    country: req.user.country,
   })
     .sort({ sold_count: -1 }) // Sort by sold count in descending order
     .populate("owner", "name profile_pic")
@@ -80,6 +81,7 @@ exports.getForYouImages = catchAsyncErrors(async (req, res, next) => {
       category: { $in: categories },
       // Exclude already liked images
       _id: { $nin: user.liked_images },
+      country: req.user.country,
     })
       .populate("owner", "name profile_pic")
       .limit(20);
@@ -113,6 +115,7 @@ exports.getNewlyAddedImages = catchAsyncErrors(async (req, res, next) => {
   const images = await Image.find({
     uploaded_at: { $gte: startWeek, $lte: endWeek },
     isLive: true,
+    country: req.user.country,
   })
     .sort({ uploaded_at: -1 })
     .populate("owner", "name profile_pic");
@@ -132,7 +135,7 @@ exports.makeFeaturedAndRemoveFeaturedImage = catchAsyncErrors(
   async (req, res, next) => {
     const imageId = req.params;
     const image = await Image.findById(imageId);
-
+    console.log(imageId);
     if (!image) {
       return next(new ErrorHandler("Image Not Found!", 404));
     }
@@ -154,10 +157,10 @@ exports.makeFeaturedAndRemoveFeaturedImage = catchAsyncErrors(
 
 //get Featured images
 exports.getFeaturedImages = catchAsyncErrors(async (req, res, next) => {
-  const images = await Image.find({ isFeatured: true }).populate(
-    "owner",
-    "name profile_pic"
-  );
+  const images = await Image.find({
+    isFeatured: true,
+    country: req.user.country,
+  }).populate("owner", "name profile_pic");
 
   if (!images) {
     return next(new ErrorHandler("Featured Images Not Found!", 404));
@@ -174,10 +177,11 @@ exports.getImagesAsCategory = catchAsyncErrors(async (req, res, next) => {
   if (!req.params.category) {
     return next(new ErrorHandler("Please provide category"));
   }
-  const images = await Image.find({ category: req.params.category }).populate(
-    "owner",
-    "name profile_pic"
-  );
+  const images = await Image.find({
+    category: req.params.category,
+    country: req.user.country,
+    isLive: true,
+  }).populate("owner", "name profile_pic");
 
   if (!images) {
     return next(new ErrorHandler("Image not found or invalid category!"));
@@ -241,6 +245,7 @@ exports.search = catchAsyncErrors(async (req, res) => {
     if (requestingUserRole === "user") {
       searchCriteria.push({
         role: { $nin: ["superadmin", "admin", "moderator"] },
+        country: req.user.country,
       });
     }
 
@@ -285,6 +290,7 @@ exports.search = catchAsyncErrors(async (req, res) => {
     const imageSearchCriteria = query
       ? {
           title: { $regex: query, $options: "i" },
+          country: req.user.country,
         }
       : {};
 

@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.xentro.epic",
+      "sha256_cert_fingerprints": [
+        "3C:F0:1F:5F:D5:B5:57:29:52:47:C3:2C:1B:84:C1:F6:22:6E:8E:AB:C4:FC:82:1E:71:38:A9:6C:5C:6D:3A:1A"
+      ]
+    }
+  }
+]

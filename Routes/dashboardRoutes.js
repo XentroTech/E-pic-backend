@@ -1,5 +1,5 @@
 const express = require("express");
-const { isAuthenticated } = require("../middlewares/Auth");
+const { isAuthenticated, authorizeRoles } = require("../middlewares/Auth");
 const {
   getDashboardData,
   getImageRevenue,
@@ -9,8 +9,23 @@ const {
 
 const router = express.Router();
 
-router.get("/dashboard/statistics/image", isAuthenticated, getImageRevenue);
-router.get("/dashboard/statistics/space", isAuthenticated, getSpaceRevenue);
-router.get("/dashboard/statistics/coin", isAuthenticated, getCoinRevenue);
+router.get(
+  "/dashboard/statistics/image",
+  // authorizeRoles("admin", "superadmin"),
+  isAuthenticated,
+  getImageRevenue
+);
+router.get(
+  "/dashboard/statistics/space",
+  // authorizeRoles("admin", "superadmin"),
+  isAuthenticated,
+  getSpaceRevenue
+);
+router.get(
+  "/dashboard/statistics/coin",
+  // authorizeRoles("admin", "superadmin"),
+  isAuthenticated,
+  getCoinRevenue
+);
 
 module.exports = router;

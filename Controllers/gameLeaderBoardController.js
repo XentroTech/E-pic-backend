@@ -8,24 +8,17 @@ exports.getGameLeaderBoard = catchAsyncErrors(async (req, res, next) => {
   let startOfDay, endOfDay;
   if (!date) {
     const now = new Date();
-    endOfDay = new Date(now);
-    // today 9pm
-    endOfDay.setHours(21, 0, 0, 0);
-    if (now < endOfDay) {
-      // set as previous  day
-      endOfDay.setDate(endOfDay.getDate() - 1);
-    }
-    startOfDay = new Date(endOfDay);
-    // previous day 9pm
-    startOfDay.setDate(startOfDay.getDate() - 1);
+
+    startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    endOfDay = new Date(startOfDay);
+    endOfDay.setHours(23, 59, 59, 999);
   } else {
     const selectedDate = new Date(date);
     startOfDay = new Date(selectedDate);
-    // selected day's 9pm
-    startOfDay.setHours(21, 0, 0, 0);
-
+    startOfDay.setHours(0, 0, 0, 0);
     endOfDay = new Date(startOfDay);
-    endOfDay.setDate(endOfDay.getDate() + 1);
+    endOfDay.setHours(23, 59, 59, 999);
   }
   //fetch data
   const leaderBoard = await GameLeaderBoard.find({

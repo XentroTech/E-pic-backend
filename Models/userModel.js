@@ -20,9 +20,9 @@ const userSchema = new Schema(
     },
     email: {
       type: String,
-      // required: [true, "Please enter your email"],
+      required: [true, "Please enter your email"],
       unique: true,
-      // validate: [validator.isEmail, "Please enter valid email"],
+      validate: [validator.isEmail, "Please enter valid email"],
     },
     password: {
       type: String,
@@ -83,6 +83,8 @@ const userSchema = new Schema(
     adDetails: [{ adCount: { type: Number }, awardedCoin: { type: Number } }],
     fcmToken: { type: String },
     isActive: { type: Boolean, default: true },
+    inActiveDate: { type: Date, default: Date.now },
+    reActivationDate: { type: Date, default: Date.now },
     resetPasswordOtp: { type: String },
     resetPasswordOtpExpire: { type: Date },
   },

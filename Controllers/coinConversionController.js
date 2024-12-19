@@ -26,7 +26,6 @@ exports.getCoinConversionInfo = catchAsyncErrors(async (req, res, next) => {
   const coinConversionInfo = await CoinConversion.find({
     country: req.user.country,
   });
-
   if (!coinConversionInfo) {
     return next(new ErrorHandler("coin conversion info not found", 400));
   }

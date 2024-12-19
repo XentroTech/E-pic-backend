@@ -5,7 +5,7 @@ const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const ErrorHandler = require("../utils/errorHandler");
 const processPayment = require("../utils/processPayment");
 const path = require("path");
-const BASE_URL = "http://dev.e-pic.co/";
+const BASE_URL = "https://dev.e-pic.co/";
 const Transaction = require("../Models/transactionModal");
 const Warning = require("../Models/WarningModel");
 const sendEmail = require("../utils/sendEmail");
@@ -133,64 +133,10 @@ exports.getAllImages = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-//get pending images
-// exports.getPendingImages = catchAsyncErrors(async (req, res, next) => {
-//   const { query = "", page = 1, limit = 10 } = req.query;
-
-//   let searchCriteria = {};
-//   if (query) {
-//     // If search query exists, search by username, email, or mobile
-//     searchCriteria = {
-//       $or: [
-//         { title: { $regex: query, $options: "i" } },
-//         { email: { $regex: query, $options: "i" } },
-//       ],
-//     };
-//   }
-
-//   // Get the total count of image matching the search criteria
-//   const totalImages = await Image.countDocuments(searchCriteria);
-
-//   // Use aggregate to fetch images along with owner details
-//   const images = await Image.aggregate([
-//     { $match: searchCriteria },
-//     { $match: { isLive: false, country: req.user.country } },
-//     { $sort: { uploaded_at: -1 } },
-//     {
-//       $lookup: {
-//         from: "users",
-//         localField: "owner",
-//         foreignField: "_id",
-//         as: "ownerDetails",
-//       },
-//     },
-//     { $unwind: "$ownerDetails" },
-//     {
-//       $skip: (page - 1) * limit,
-//     },
-//     {
-//       $limit: parseInt(limit),
-//     },
-//   ]);
-
-//   // If no image found
-//   if (images.length === 0) {
-//     return next(new ErrorHandler("No Image found", 404));
-//   }
-
-//   // Send paginated response
-//   res.status(200).json({
-//     totalImages,
-//     currentPage: page,
-//     totalPages: Math.ceil(totalImages / limit),
-//     images,
-//   });
-// });
 exports.getPendingImages = catchAsyncErrors(async (req, res, next) => {
   const { query = "", page = 1, limit = 10, country } = req.query;
 
   let searchCriteria = { isLive: false };
-
   // Check user role
   if (req.user.role === "superadmin") {
     // Superadmin can filter by any country if provided
@@ -206,7 +152,6 @@ exports.getPendingImages = catchAsyncErrors(async (req, res, next) => {
       new ErrorHandler("You are not authorized to perform this action", 403)
     );
   }
-  console.log(req.query.query);
   if (query) {
     searchCriteria = {
       ...searchCriteria,
@@ -260,7 +205,7 @@ exports.getPendingImages = catchAsyncErrors(async (req, res, next) => {
     if (!images.length) {
       return next(new ErrorHandler("No Image found", 404));
     }
-
+    const imageCount = await Image.countDocuments({ isLive: false });
     // Send paginated response
     res.status(200).json({
       success: true,
@@ -268,6 +213,7 @@ exports.getPendingImages = catchAsyncErrors(async (req, res, next) => {
       currentPage: page,
       totalPages: Math.ceil(totalImagesCount / limit),
       images,
+      imageCount,
     });
   } catch (error) {
     return next(new ErrorHandler("Failed to fetch images", 500));
@@ -350,6 +296,9 @@ exports.getLiveImages = catchAsyncErrors(async (req, res, next) => {
       return next(new ErrorHandler("No Image found", 404));
     }
 
+    // total image count
+    const imageCount = await Image.countDocuments({ isLive: true });
+
     // Send paginated response
     res.status(200).json({
       success: true,
@@ -357,6 +306,7 @@ exports.getLiveImages = catchAsyncErrors(async (req, res, next) => {
       currentPage: page,
       totalPages: Math.ceil(totalImagesCount / limit),
       images,
+      imageCount,
     });
   } catch (error) {
     return next(new ErrorHandler("Failed to fetch images", 500));
@@ -381,11 +331,16 @@ exports.getAnImage = catchAsyncErrors(async (req, res, next) => {
 
 // get most liked images// popular images
 exports.getMostLikedImages = catchAsyncErrors(async (req, res, next) => {
-  const images = await Image.find({})
-
+  const images = await Image.find({ country: req.user.country })
     .sort({ likesCount: -1, uploaded_at: -1 })
     .limit(10)
     .populate("owner", "name profile_pic");
+  if (!images) {
+    return next(new ErrorHandler("image not found"));
+  }
+
+  let image = await Image.find({ country: req.user.country });
+  console.log(image);
   res.status(200).json({
     success: true,
     statusCode: 200,
@@ -439,6 +394,7 @@ exports.deleteImage = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Image not found", 404));
   }
   const user = await User.findById(image.owner);
+  console.log(user);
   if (!user) {
     return next(new ErrorHandler("image owner not found", 404));
   }
@@ -473,6 +429,7 @@ exports.deleteImage = catchAsyncErrors(async (req, res, next) => {
       warning.warningCount == 0 ? "1st" : "2nd"
     } warning. Continued violation of our rules will result in the following actions:`,
     country: req.user.country,
+    senderImage: `${req.user.profile_pic}`,
   });
   await sendNotification.save();
 
@@ -554,6 +511,7 @@ exports.likeImage = catchAsyncErrors(async (req, res, next) => {
         title: `${user.name}`,
         message: `liked your image`,
         country: req.user.country,
+        senderImage: `${user.profile_pic}`,
       });
       await sendNotification.save();
     }
@@ -576,6 +534,10 @@ exports.purchaseImage = catchAsyncErrors(async (req, res, next) => {
     (img) => img.image.toString() === imageId
   );
 
+  const wantToBuyImage = await Image.findById(imageId);
+  if (wantToBuyImage.owner.toString() === req.user._id.toString()) {
+    return next(new ErrorHandler("You can not purchase your image", 400));
+  }
   if (purchasedImage) {
     if (
       purchasedImage.isUsedForGame &&
